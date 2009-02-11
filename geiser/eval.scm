@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (geiser eval)
-  #:export (eval-in comp-file)
+  #:export (eval-in comp-file load-file)
   #:use-module (srfi srfi-1))
 
 (define (eval-in form module-name)
@@ -70,9 +70,12 @@ SUBR, MSG and REST."
         (current (getcwd)))
     (dynamic-wind
         (lambda () (chdir dest))
-        (lambda ()
-          (compile-file path)
-          (compile-and-load path))
+        (lambda () (compile-file path))
         (lambda () (chdir current)))))
+
+(define (load-file path)
+  "Load file, given its full @var{path}."
+  (compile-and-load path))
+
 
 ;;; eval.scm ends here
