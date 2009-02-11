@@ -70,7 +70,9 @@ SUBR, MSG and REST."
         (current (getcwd)))
     (dynamic-wind
         (lambda () (chdir dest))
-        (lambda () (compile-file path))
+        (lambda ()
+          (compile-file path)
+          (compile-and-load path))
         (lambda () (chdir current)))))
 
 ;;; eval.scm ends here
