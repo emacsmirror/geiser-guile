@@ -30,15 +30,17 @@
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
 
-(define (proc-args proc)
-  (let ((proc (and (symbol? proc)
-                   (module-bound? (current-module) proc)
-                   (eval proc (current-module)))))
-    (cond ((not proc) #f)
-          ((program? proc) (program-args proc))
-          ((procedure? proc) (procedure-args proc))
-          ((macro? proc) (macro-args proc))
-          (else #f))))
+(define (resolve-symbol sym)
+  (and (symbol? sym)
+       (module-bound? (current-module) sym)
+       (eval sym (current-module))))
+
+(define (obj-args obj)
+  (cond ((not obj) #f)
+        ((program? obj) (program-args obj))
+        ((procedure? obj) (procedure-args obj))
+        ((macro? obj) (macro-args obj))
+        (else #f)))
 
 (define (program-args program)
   (let* ((arity (program-arity program))
@@ -61,10 +63,9 @@
                  (and (not (null? env)) env))))
 
 (define (macro-args macro)
-  ;; check if return value is a procedure
   (let ((prog (macro-transformer macro)))
     (if prog
-        (program-args prog)
+        (obj-args prog)
         (format-args '(...) #f #f))))
 
 (define (format-args args opt module)
@@ -72,9 +73,17 @@
         (cons 'optional (or opt '()))
         (cons 'module (if module (module-name module) '()))))
 
+(define (proc-args proc)
+  (obj-args (resolve-symbol proc)))
+
 (define (completions prefix)
   (sort! (map symbol->string
               (apropos-internal (string-append "^" prefix)))
          string<?))
+
+(define (proc-location proc)
+  (let ((prog (resolve-symbol proc)))
+    (and prog
+         (program-source ))))
 
 ;;; introspection.scm ends here
