@@ -62,8 +62,15 @@ SUBR, MSG and REST."
           (cons 'msg (if msg (apply format (cons #f (cons msg margs))) '()))
           (cons 'rest (or rest '())))))
 
-(define (comp-file path)
+(define (comp-file path . dest)
   "Compile and load file, given its full @var{path}."
-  (compile-file path))
+  (let ((dest (if (null? dest)
+                  (dirname path)
+                  (car dest)))
+        (current (getcwd)))
+    (dynamic-wind
+        (lambda () (chdir dest))
+        (lambda () (compile-file path))
+        (lambda () (chdir current)))))
 
 ;;; eval.scm ends here
