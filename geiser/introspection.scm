@@ -61,6 +61,7 @@
                  (and (not (null? env)) env))))
 
 (define (macro-args macro)
+  ;; check if return value is a procedure
   (let ((prog (macro-transformer macro)))
     (if prog
         (program-args prog)

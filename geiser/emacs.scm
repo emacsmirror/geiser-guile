@@ -35,5 +35,4 @@
                 :select ((comp-file . ge:compile-file)
                          (load-file . ge:load-file))))
 
-
 ;;; emacs.scm ends here
