@@ -112,9 +112,7 @@
   (make-location (module-filename name) #f))
 
 (define (symbol-location sym)
-  (let ((prog (resolve-symbol sym)))
-    (cond ((program? prog) (program-location prog))
-          ((symbol-module sym) => make-location-from-module-name)
-          (else '()))))
+  (cond ((symbol-module sym) => make-location-from-module-name)
+        (else '())))
 
 ;;; introspection.scm ends here
