@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (geiser emacs)
-  #:re-export (ge:proc-args
+  #:re-export (ge:arguments
                ge:completions
                ge:symbol-location
                ge:compile-file
