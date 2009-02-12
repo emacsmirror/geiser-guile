@@ -89,16 +89,7 @@
   (let ((src (program-source prog 0)))
     (and src (source:line src))))
 
-(define (module-filename name)
-  (let* ((name (map symbol->string name))
-         (reverse-name (reverse name))
-	 (leaf (car reverse-name))
-	 (dir-hint-module-name (reverse (cdr reverse-name)))
-	 (dir-hint (apply string-append
-                          (map (lambda (elt)
-                                 (string-append elt "/"))
-                               dir-hint-module-name))))
-    (%search-load-path (in-vicinity dir-hint leaf))))
+(define module-filename (@@ (ice-9 session) module-filename))
 
 (define (program-file prog)
   (let* ((mod (and prog (program-module prog)))
@@ -108,10 +99,22 @@
 (define (program-location prog)
   (make-location (program-file prog) (program-line prog)))
 
+(define (symbol-module sym)
+  (call/cc
+   (lambda (k)
+     (apropos-fold (lambda (module name var init)
+                     (if (eq? name sym) (k (module-name module)) init))
+                   #f
+                   (symbol->string sym)
+                   (apropos-fold-accessible (current-module))))))
+
+(define (make-location-from-module-name name)
+  (make-location (module-filename name) #f))
+
 (define (symbol-location sym)
   (let ((prog (resolve-symbol sym)))
-    (if (program? prog)
-        (program-location prog)
-        '())))
+    (cond ((program? prog) (program-location prog))
+          ((symbol-module sym) => make-location-from-module-name)
+          (else '()))))
 
 ;;; introspection.scm ends here
