@@ -30,6 +30,9 @@
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
 
+(define (proc-args proc)
+  (obj-args (resolve-symbol proc)))
+
 (define (resolve-symbol sym)
   (and (symbol? sym)
        (module-bound? (current-module) sym)
@@ -52,15 +55,25 @@
                  (program-module program))))
 
 (define (procedure-args proc)
-  (let* ((arity (procedure-property proc 'arity))
-         (req (first arity))
-         (opt (third arity))
-         (env (procedure-environment proc)))
-    (format-args (map (lambda (n)
-                        (string->symbol (format "arg~A" (+ 1 n))))
-                      (iota req))
-                 (and opt 'rest)
-                 (and (not (null? env)) env))))
+  (let ((name (procedure-name proc)))
+    (cond ((procedure-source proc) => (lambda (src)
+                                        (procedure-args-from-source name src)))
+          (else (let* ((arity (procedure-property proc 'arity))
+                       (req (first arity))
+                       (opt (third arity)))
+                  (format-args (map (lambda (n)
+                                      (string->symbol (format "arg~A" (+ 1 n))))
+                                    (iota req))
+                               (and opt 'rest)
+                               (and name (symbol-module name))))))))
+
+(define (procedure-args-from-source name src)
+  (let ((formals (cadr src)))
+    (cond ((list? formals) (format-args formals #f (symbol-module name)))
+          ((pair? formals) (format-args (car formals)
+                                        (cdr formals)
+                                        (symbol-module name)))
+          (else '()))))
 
 (define (macro-args macro)
   (let ((prog (macro-transformer macro)))
@@ -71,10 +84,9 @@
 (define (format-args args opt module)
   (list (cons 'required args)
         (cons 'optional (or opt '()))
-        (cons 'module (if module (module-name module) '()))))
-
-(define (proc-args proc)
-  (obj-args (resolve-symbol proc)))
+        (cons 'module (cond ((module? module) (module-name module))
+                            ((list? module) module)
+                            (else '())))))
 
 (define (completions prefix)
   (sort! (map symbol->string
