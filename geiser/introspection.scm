@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (geiser introspection)
-  #:export (proc-args completions)
+  #:export (proc-args completions symbol-location)
   #:use-module (system vm program)
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
@@ -81,9 +81,37 @@
               (apropos-internal (string-append "^" prefix)))
          string<?))
 
-(define (proc-location proc)
-  (let ((prog (resolve-symbol proc)))
-    (and prog
-         (program-source ))))
+(define (make-location file line)
+  (list (cons 'file (if (string? file) file '()))
+        (cons 'line (if (number? line) (+ 1 line) '()))))
+
+(define (program-line prog)
+  (let ((src (program-source prog 0)))
+    (and src (source:line src))))
+
+(define (module-filename name)
+  (let* ((name (map symbol->string name))
+         (reverse-name (reverse name))
+	 (leaf (car reverse-name))
+	 (dir-hint-module-name (reverse (cdr reverse-name)))
+	 (dir-hint (apply string-append
+                          (map (lambda (elt)
+                                 (string-append elt "/"))
+                               dir-hint-module-name))))
+    (%search-load-path (in-vicinity dir-hint leaf))))
+
+(define (program-file prog)
+  (let* ((mod (and prog (program-module prog)))
+         (name (and mod (module-name mod))))
+    (and name (module-filename name))))
+
+(define (program-location prog)
+  (make-location (program-file prog) (program-line prog)))
+
+(define (symbol-location sym)
+  (let ((prog (resolve-symbol sym)))
+    (if (program? prog)
+        (program-location prog)
+        '())))
 
 ;;; introspection.scm ends here

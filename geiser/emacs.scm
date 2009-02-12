@@ -27,6 +27,7 @@
 (define-module (geiser emacs)
   #:re-export (ge:proc-args
                ge:completions
+               ge:symbol-location
                ge:compile-file
                ge:load-file)
   #:use-module ((geiser introspection)

@@ -70,7 +70,9 @@ SUBR, MSG and REST."
         (current (getcwd)))
     (dynamic-wind
         (lambda () (chdir dest))
-        (lambda () (compile-file path))
+        (lambda ()
+          (and (compile-file path)
+               (load-compiled (string-append dest "/" (compiled-file-name path)))))
         (lambda () (chdir current)))))
 
 (define (load-file path)
