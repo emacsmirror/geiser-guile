@@ -32,12 +32,9 @@
 
 (define (arguments sym . syms)
   (let loop ((sym sym) (syms syms))
-    (cond ((proc-args sym) => (lambda (args) (cons sym args)))
+    (cond ((obj-args (resolve-symbol sym)) => (lambda (args) (cons sym args)))
           ((null? syms) #f)
           (else (loop (car syms) (cdr syms))))))
-
-(define (proc-args proc)
-  (obj-args (resolve-symbol proc)))
 
 (define (resolve-symbol sym)
   (and (symbol? sym)
@@ -50,6 +47,15 @@
         ((procedure? obj) (procedure-args obj))
         ((macro? obj) (macro-args obj))
         (else #f)))
+
+(define (symbol-module sym)
+  (call/cc
+   (lambda (k)
+     (apropos-fold (lambda (module name var init)
+                     (if (eq? name sym) (k (module-name module)) init))
+                   #f
+                   (symbol->string sym)
+                   (apropos-fold-accessible (current-module))))))
 
 (define (program-args program)
   (let* ((arity (program-arity program))
@@ -99,38 +105,17 @@
               (apropos-internal (string-append "^" prefix)))
          string<?))
 
+(define (symbol-location sym)
+  (cond ((symbol-module sym) => make-location-from-module-name)
+        (else '())))
+
 (define (make-location file line)
   (list (cons 'file (if (string? file) file '()))
         (cons 'line (if (number? line) (+ 1 line) '()))))
 
-(define (program-line prog)
-  (let ((src (program-source prog 0)))
-    (and src (source:line src))))
-
 (define module-filename (@@ (ice-9 session) module-filename))
-
-(define (program-file prog)
-  (let* ((mod (and prog (program-module prog)))
-         (name (and mod (module-name mod))))
-    (and name (module-filename name))))
-
-(define (program-location prog)
-  (make-location (program-file prog) (program-line prog)))
-
-(define (symbol-module sym)
-  (call/cc
-   (lambda (k)
-     (apropos-fold (lambda (module name var init)
-                     (if (eq? name sym) (k (module-name module)) init))
-                   #f
-                   (symbol->string sym)
-                   (apropos-fold-accessible (current-module))))))
 
 (define (make-location-from-module-name name)
   (make-location (module-filename name) #f))
-
-(define (symbol-location sym)
-  (cond ((symbol-module sym) => make-location-from-module-name)
-        (else '())))
 
 ;;; introspection.scm ends here
