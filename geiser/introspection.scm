@@ -25,19 +25,19 @@
 ;;; Code:
 
 (define-module (geiser introspection)
-  #:export (arguments completions symbol-location)
+  #:export (arguments completions symbol-location docstring)
   #:use-module (system vm program)
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
 
 (define (arguments sym . syms)
   (let loop ((sym sym) (syms syms))
-    (cond ((obj-args (resolve-symbol sym)) => (lambda (args) (cons sym args)))
+    (cond ((obj-args (symbol->obj sym)) => (lambda (args) (cons sym args)))
           ((null? syms) #f)
           (else (loop (car syms) (cdr syms))))))
 
-(define (resolve-symbol sym)
-  (module-ref (current-module) sym))
+(define (symbol->obj sym)
+  (and (symbol? sym) (module-ref (current-module) sym)))
 
 (define (obj-args obj)
   (cond ((not obj) #f)
@@ -80,9 +80,11 @@
 (define (procedure-args-from-source name src)
   (let ((formals (cadr src)))
     (cond ((list? formals) (format-args formals #f (symbol-module name)))
-          ((pair? formals) (format-args (car formals)
-                                        (cdr formals)
-                                        (symbol-module name)))
+          ((pair? formals) (let ((req (car formals))
+                                 (opt (cdr formals)))
+                             (format-args (if (list? req) req (list req))
+                                          opt
+                                          (symbol-module name))))
           (else #f))))
 
 (define (macro-args macro)
