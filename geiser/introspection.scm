@@ -38,7 +38,9 @@
           (else (loop (car syms) (cdr syms))))))
 
 (define (symbol->obj sym)
-  (and (symbol? sym) (module-ref (current-module) sym)))
+  (and (symbol? sym)
+       (module-defined? (current-module) sym)
+       (module-ref (current-module) sym)))
 
 (define (obj-args obj)
   (cond ((not obj) #f)
