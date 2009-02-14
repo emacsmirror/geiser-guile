@@ -28,6 +28,7 @@
   #:export (arguments completions symbol-location docstring)
   #:use-module (system vm program)
   #:use-module (ice-9 session)
+  #:use-module (ice-9 documentation)
   #:use-module (srfi srfi-1))
 
 (define (arguments sym . syms)
@@ -117,5 +118,9 @@
 
 (define (make-location-from-module-name name)
   (make-location (module-filename name) #f))
+
+
+(define (docstring sym)
+  (object-documentation (symbol->obj sym)))
 
 ;;; introspection.scm ends here

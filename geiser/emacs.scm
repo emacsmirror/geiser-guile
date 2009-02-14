@@ -29,7 +29,8 @@
                ge:completions
                ge:symbol-location
                ge:compile-file
-               ge:load-file)
+               ge:load-file
+               ge:docstring)
   #:use-module ((geiser introspection)
                 :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser eval)
