@@ -33,9 +33,17 @@
 
 (define (arguments sym . syms)
   (let loop ((sym sym) (syms syms))
-    (cond ((obj-args (symbol->obj sym)) => (lambda (args) (cons sym args)))
+    (cond ((obj-args (symbol->obj sym)) => (lambda (args)
+                                             (cons sym (apply args-alist args))))
           ((null? syms) #f)
           (else (loop (car syms) (cdr syms))))))
+
+(define (args-alist args opt module)
+  (list (cons 'required args)
+        (cons 'optional (or opt '()))
+        (cons 'module (cond ((module? module) (module-name module))
+                            ((list? module) module)
+                            (else '())))))
 
 (define (symbol->obj sym)
   (and (symbol? sym)
@@ -63,9 +71,9 @@
          (arg-no (first arity))
          (opt (> (second arity) 0))
          (args (map first (take (program-bindings program) arg-no))))
-    (format-args (if opt (drop-right args 1) args)
-                 (and opt (last args))
-                 (program-module program))))
+    (list (if opt (drop-right args 1) args)
+          (and opt (last args))
+          (program-module program))))
 
 (define (procedure-args proc)
   (let ((name (procedure-name proc)))
@@ -74,34 +82,27 @@
           (else (let* ((arity (procedure-property proc 'arity))
                        (req (first arity))
                        (opt (third arity)))
-                  (format-args (map (lambda (n)
-                                      (string->symbol (format "arg~A" (+ 1 n))))
-                                    (iota req))
-                               (and opt 'rest)
-                               (and name (symbol-module name))))))))
+                  (list (map (lambda (n)
+                               (string->symbol (format "arg~A" (+ 1 n))))
+                             (iota req))
+                        (and opt 'rest)
+                        (and name (symbol-module name))))))))
 
 (define (procedure-args-from-source name src)
   (let ((formals (cadr src)))
-    (cond ((list? formals) (format-args formals #f (symbol-module name)))
+    (cond ((list? formals) (list formals #f (symbol-module name)))
           ((pair? formals) (let ((req (car formals))
                                  (opt (cdr formals)))
-                             (format-args (if (list? req) req (list req))
-                                          opt
-                                          (symbol-module name))))
+                             (list (if (list? req) req (list req))
+                                   opt
+                                   (symbol-module name))))
           (else #f))))
 
 (define (macro-args macro)
   (let ((prog (macro-transformer macro)))
     (if prog
         (obj-args prog)
-        (format-args '(...) #f #f))))
-
-(define (format-args args opt module)
-  (list (cons 'required args)
-        (cons 'optional (or opt '()))
-        (cons 'module (cond ((module? module) (module-name module))
-                            ((list? module) module)
-                            (else '())))))
+        (list '(...) #f #f))))
 
 (define (completions prefix)
   (sort! (map symbol->string
@@ -121,8 +122,32 @@
 (define (make-location-from-module-name name)
   (make-location (module-filename name) #f))
 
+(define (display-docstring sym)
+  (let ((obj (symbol->obj sym)))
+    (if obj
+        (let* ((args (obj-args obj))
+               (req (and args (car args)))
+               (opt (and args (cadr args)))
+               (signature (if args (cond ((and (not req) (not opt)) (list sym))
+                                         ((and (not opt) req) (cons sym req))
+                                         ((and (not req) opt) (cons sym opt))
+                                         (else `(,sym ,@req . ,opt)))
+                              sym))
+               (type (cond ((macro? obj) "A macro")
+                           ((procedure? obj) "A  procedure")
+                           ((program? obj) "A compiled program")
+                           (else "An object")))
+               (modname (symbol-module sym)))
+          (display signature)
+          (newline)
+          (display type)
+          (if modname (begin (display " in module ")
+                             (display modname)))
+          (newline)
+          (display (or (object-documentation obj) ""))))))
 
 (define (docstring sym)
-  (object-documentation (symbol->obj sym)))
+  (with-output-to-string
+    (lambda () (display-docstring sym))))
 
 ;;; introspection.scm ends here
