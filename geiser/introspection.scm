@@ -25,7 +25,12 @@
 ;;; Code:
 
 (define-module (geiser introspection)
-  #:export (arguments completions symbol-location docstring)
+  #:export (arguments
+            completions
+            symbol-location
+            docstring
+            all-modules
+            module-children)
   #:use-module (system vm program)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
@@ -140,13 +145,69 @@
           (display signature)
           (newline)
           (display type)
-          (if modname (begin (display " in module ")
-                             (display modname)))
+          (if modname
+              (begin
+                (display " in module ")
+                (display modname)))
           (newline)
-          (if doc (begin (display doc)))))))
+          (if doc (display doc))))))
 
 (define (docstring sym)
   (with-output-to-string
     (lambda () (display-docstring sym))))
+
+(define (all-modules)
+  (let ((roots ((@@ (ice-9 session) root-modules))))
+    (sort! (map (lambda (m)
+                  (format "~A" (module-name m)))
+                (fold (lambda (m all)
+                        (append (all-child-modules m) all))
+                      roots
+                      roots))
+           string<?)))
+
+(define (child-modules mod)
+  (delq mod ((@@ (ice-9 session) submodules) mod)))
+
+(define (all-child-modules mod)
+  (let ((children (child-modules mod)))
+    (fold (lambda (m all)
+            (append (all-child-modules m) all))
+          children children)))
+
+(define (module-children mod-name)
+  (let* ((elts (hash-fold classify-module-object
+                          (list '() '() '())
+                          (module-obarray (maybe-module-interface mod-name))))
+         (elts (map sort-symbols! elts)))
+    (list (cons 'modules (map (lambda (m) `(,@mod-name ,m)) (car elts)))
+          (cons 'procs (cadr elts))
+          (cons 'vars (caddr elts)))))
+
+(define (sort-symbols! syms)
+  (let ((cmp (lambda (l r)
+               (string<? (symbol->string l) (symbol->string r)))))
+    (sort! syms cmp)))
+
+(define (maybe-module-interface mod-name)
+  (catch #t
+         (lambda () (resolve-interface mod-name))
+         (lambda args (resolve-module mod-name))))
+
+(define (classify-module-object name var elts)
+  (let ((obj (and (variable-bound? var)
+                  (variable-ref var))))
+    (cond ((not obj) elts)
+          ((and (module? obj) (eq? (module-kind obj) 'directory))
+           (list (cons name (car elts))
+                 (cadr elts)
+                 (caddr elts)))
+          ((or (procedure? obj) (program? obj) (macro? obj))
+           (list (car elts)
+                 (cons name (cadr elts))
+                 (caddr elts)))
+          (else (list (car elts)
+                      (cadr elts)
+                      (cons name (caddr elts)))))))
 
 ;;; introspection.scm ends here
