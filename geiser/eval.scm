@@ -62,18 +62,10 @@ SUBR, MSG and REST."
           (cons 'msg (if msg (apply format (cons #f (cons msg margs))) '()))
           (cons 'rest (or rest '())))))
 
-(define (comp-file path . dest)
+(define (comp-file path)
   "Compile and load file, given its full @var{path}."
-  (let ((dest (if (null? dest)
-                  (dirname path)
-                  (car dest)))
-        (current (getcwd)))
-    (dynamic-wind
-        (lambda () (chdir dest))
-        (lambda ()
-          (and (compile-file path)
-               (load-compiled (string-append dest "/" (compiled-file-name path)))))
-        (lambda () (chdir current)))))
+  (and (compile-file path)
+       (load-compiled (compiled-file-name path))))
 
 (define (load-file path)
   "Load file, given its full @var{path}."
