@@ -31,7 +31,8 @@
                ge:compile-file
                ge:load-file
                ge:docstring
-               ge:all-modules)
+               ge:all-modules
+               ge:module-children)
   #:use-module ((geiser introspection)
                 :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser eval)
