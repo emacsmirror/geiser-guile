@@ -26,7 +26,8 @@
 
 (define-module (geiser eval)
   #:export (eval-in comp-file load-file)
-  #:use-module (srfi srfi-1))
+  #:use-module (srfi srfi-1)
+  #:no-backtrace)
 
 (define (eval-in form module-name)
   "Evals @var{form} in the module designated by @var{module-name}.
@@ -35,7 +36,8 @@ The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
 if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
 in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
 SUBR, MSG and REST."
-  (let ((module (or (and module-name (resolve-module module-name))
+  (let ((module (or (and (list? module-name)
+                         (resolve-module module-name))
                     (current-module))))
     (catch #t
       (lambda ()

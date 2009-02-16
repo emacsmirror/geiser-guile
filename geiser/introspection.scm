@@ -30,7 +30,8 @@
             symbol-location
             docstring
             all-modules
-            module-children)
+            module-children
+            module-location)
   #:use-module (system vm program)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
@@ -114,8 +115,11 @@
               (apropos-internal (string-append "^" prefix)))
          string<?))
 
+(define (module-location name)
+  (make-location (module-filename name) #f))
+
 (define (symbol-location sym)
-  (cond ((symbol-module sym) => make-location-from-module-name)
+  (cond ((symbol-module sym) => module-location)
         (else '())))
 
 (define (make-location file line)
@@ -123,9 +127,6 @@
         (cons 'line (if (number? line) (+ 1 line) '()))))
 
 (define module-filename (@@ (ice-9 session) module-filename))
-
-(define (make-location-from-module-name name)
-  (make-location (module-filename name) #f))
 
 (define (display-docstring sym)
   (let ((obj (symbol->obj sym)))
