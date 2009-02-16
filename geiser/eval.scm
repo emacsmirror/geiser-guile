@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (geiser eval)
-  #:export (eval-in comp-file load-file)
+  #:export (eval-in compile-in comp-file load-file)
   #:use-module (srfi srfi-1)
   #:no-backtrace)
 
@@ -45,13 +45,38 @@ SUBR, MSG and REST."
                (output
                 (with-output-to-string
                   (lambda ()
+                    (set! result (eval form module))))))
+          (make-result result output)))
+      error-handler)))
+
+(define (compile-in form module-name)
+  "Compiles @var{form} in the module designated by @var{module-name}.
+If @var{module-name} is @var{#f} or resolution fails, the current module is used instead.
+The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
+if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
+in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
+SUBR, MSG and REST."
+  (let ((module (or (and (list? module-name)
+                         (resolve-module module-name))
+                    (current-module))))
+    (catch #t
+      (lambda ()
+        (let* ((result #f)
+               (output
+                (with-output-to-string
+                  (lambda ()
                     (save-module-excursion
                      (lambda ()
                        (set-current-module module)
                        (set! result (compile form))))))))
-          (list (cons 'result result) (cons 'output output))))
-      (lambda (key . args)
-        (list (cons 'error (apply parse-error (cons key args))))))))
+          (make-result result output)))
+      error-handler)))
+
+(define (make-result result output)
+  (list (cons 'result result) (cons 'output output)))
+
+(define (error-handler key . args)
+  (list (cons 'error (apply parse-error (cons key args)))))
 
 (define (parse-error key . args)
   (let* ((len (length args))
