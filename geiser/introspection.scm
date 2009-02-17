@@ -149,7 +149,7 @@
   (let* ((args (obj-args obj))
          (req (and args (car args)))
          (opt (and args (cadr args))))
-    (and args (if (not opt) `(,sym ,@req) `(,sym ,@req . ,opt)) sym)))
+    (and args (if (not opt) `(,sym ,@req) `(,sym ,@req . ,opt)))))
 
 (define (symbol-documentation sym)
   (let ((obj (symbol->obj sym)))
