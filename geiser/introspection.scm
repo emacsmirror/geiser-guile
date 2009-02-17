@@ -28,7 +28,7 @@
   #:export (arguments
             completions
             symbol-location
-            docstring
+            symbol-documentation
             all-modules
             module-children
             module-location)
@@ -128,34 +128,34 @@
 
 (define module-filename (@@ (ice-9 session) module-filename))
 
-(define (display-docstring sym)
+(define (docstring sym obj)
+  (with-output-to-string
+    (lambda ()
+      (let* ((type (cond ((macro? obj) "A macro")
+                         ((procedure? obj) "A  procedure")
+                         ((program? obj) "A compiled program")
+                         (else "An object")))
+             (modname (symbol-module sym))
+            (doc (object-documentation obj)))
+        (display type)
+        (if modname
+            (begin
+              (display " in module ")
+              (display modname)))
+        (newline)
+        (if doc (display doc))))))
+
+(define (obj-signature sym obj)
+  (let* ((args (obj-args obj))
+         (req (and args (car args)))
+         (opt (and args (cadr args))))
+    (and args (if (not opt) `(,sym ,@req) `(,sym ,@req . ,opt)) sym)))
+
+(define (symbol-documentation sym)
   (let ((obj (symbol->obj sym)))
     (if obj
-        (let* ((args (obj-args obj))
-               (req (and args (car args)))
-               (opt (and args (cadr args)))
-               (signature (if args
-                              (if (not opt) `(,sym ,@req) `(,sym ,@req . ,opt))
-                              sym))
-               (type (cond ((macro? obj) "A macro")
-                           ((procedure? obj) "A  procedure")
-                           ((program? obj) "A compiled program")
-                           (else "An object")))
-               (modname (symbol-module sym))
-               (doc (object-documentation obj)))
-          (display signature)
-          (newline)
-          (display type)
-          (if modname
-              (begin
-                (display " in module ")
-                (display modname)))
-          (newline)
-          (if doc (display doc))))))
-
-(define (docstring sym)
-  (with-output-to-string
-    (lambda () (display-docstring sym))))
+        `((signature . ,(or (obj-signature sym obj) sym))
+          (docstring . ,(docstring sym obj))))))
 
 (define (all-modules)
   (let ((roots ((@@ (ice-9 session) root-modules))))

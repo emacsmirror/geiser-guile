@@ -30,7 +30,7 @@
                ge:symbol-location
                ge:compile-file
                ge:load-file
-               ge:docstring
+               ge:symbol-documentation
                ge:all-modules
                ge:module-children
                ge:module-location)
