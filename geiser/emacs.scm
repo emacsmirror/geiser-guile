@@ -25,19 +25,87 @@
 ;;; Code:
 
 (define-module (geiser emacs)
+  #:export (ge:eval
+            ge:compile
+            ge:compile-file
+            ge:load-file)
   #:re-export (ge:arguments
                ge:completions
                ge:symbol-location
-               ge:compile-file
-               ge:load-file
                ge:symbol-documentation
                ge:all-modules
                ge:module-children
                ge:module-location)
-  #:use-module ((geiser introspection)
-                :renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser eval)
-                :select ((comp-file . ge:compile-file)
-                         (load-file . ge:load-file))))
+  #:use-module (srfi srfi-1)
+  #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
+
+(define (make-result result output)
+  (list (cons 'result result) (cons 'output output)))
+
+(define (error-handler key . args)
+  (list (cons 'error (apply parse-error (cons key args)))))
+
+(define (parse-error key . args)
+  (let* ((len (length args))
+         (subr (and (> len 0) (first args)))
+         (msg (and (> len 1) (second args)))
+         (margs (and (> len 2) (third args)))
+         (rest (and (> len 3) (fourth args))))
+    (list (cons 'key key)
+          (cons 'subr (or subr '()))
+          (cons 'msg (if msg (apply format (cons #f (cons msg margs))) '()))
+          (cons 'rest (or rest '())))))
+
+(define (ge:eval form module-name)
+  "Evals @var{form} in the module designated by @var{module-name}.
+If @var{module-name} is @var{#f} or resolution fails, the current module is used instead.
+The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
+if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
+in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
+SUBR, MSG and REST."
+  (let ((module (or (and (list? module-name)
+                         (resolve-module module-name))
+                    (current-module))))
+    (catch #t
+      (lambda ()
+        (let ((result #f))
+          (let ((output
+                 (with-output-to-string
+                   (lambda ()
+                     (set! result (eval form module))))))
+            (make-result result output))))
+      error-handler)))
+
+(define (ge:compile form module-name)
+  "Compiles @var{form} in the module designated by @var{module-name}.
+If @var{module-name} is @var{#f} or resolution fails, the current module is used instead.
+The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
+if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
+in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
+SUBR, MSG and REST."
+  (let ((module (or (and (list? module-name)
+                         (resolve-module module-name))
+                    (current-module))))
+    (catch #t
+      (lambda ()
+        (let ((result #f))
+          (let ((output
+                 (with-output-to-string
+                   (lambda ()
+                     (save-module-excursion
+                      (lambda ()
+                        (set-current-module module)
+                        (set! result (compile form))))))))
+            (make-result result output))))
+      error-handler)))
+
+(define (ge:compile-file path)
+  "Compile and load file, given its full @var{path}."
+  (and (compile-file path)
+       (load-compiled (compiled-file-name path))))
+
+(define (ge:load-file path)
+  "Load file, given its full @var{path}."
+  (compile-and-load path))
 
 ;;; emacs.scm ends here
