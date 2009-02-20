@@ -58,6 +58,25 @@
           (cons 'msg (if msg (apply format (cons #f (cons msg margs))) '()))
           (cons 'rest (or rest '())))))
 
+(define (evaluate form module evaluator)
+  (let ((module (or (and (list? module-name)
+                         (resolve-module module-name))
+                    (current-module))))
+    (catch #t
+      (lambda ()
+        (let ((result #f))
+          (let ((output (with-output-to-string
+                          (lambda ()
+                            (set! result (evaluator form module))))))
+            (write-result result output))))
+      write-error)))
+
+(define (eval-compile form module)
+  (save-module-excursion
+   (lambda ()
+     (set-current-module module)
+     (compile form))))
+
 (define (ge:eval form module-name)
   "Evals @var{form} in the module designated by @var{module-name}.
 If @var{module-name} is @var{#f} or resolution fails, the current module is used instead.
@@ -65,18 +84,7 @@ The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
 if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
 in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
 SUBR, MSG and REST."
-  (let ((module (or (and (list? module-name)
-                         (resolve-module module-name))
-                    (current-module))))
-    (catch #t
-      (lambda ()
-        (let ((result #f))
-          (let ((output
-                 (with-output-to-string
-                   (lambda ()
-                     (set! result (eval form module))))))
-            (write-result result output))))
-      write-error)))
+  (evaluate form module-name eval))
 
 (define (ge:compile form module-name)
   "Compiles @var{form} in the module designated by @var{module-name}.
@@ -85,21 +93,7 @@ The result is a list of the form ((RESULT . <form-value>) (OUTPUT . <string>))
 if no evaluation error happens, or ((ERROR (KEY . <error-key>) <error-arg>...))
 in case of errors. Each error arg is a cons (NAME . VALUE), where NAME includes
 SUBR, MSG and REST."
-  (let ((module (or (and (list? module-name)
-                         (resolve-module module-name))
-                    (current-module))))
-    (catch #t
-      (lambda ()
-        (let ((result #f))
-          (let ((output
-                 (with-output-to-string
-                   (lambda ()
-                     (save-module-excursion
-                      (lambda ()
-                        (set-current-module module)
-                        (set! result (compile form))))))))
-            (write-result result output))))
-      write-error)))
+  (evaluate form module-name eval-compile))
 
 (define (ge:compile-file path)
   "Compile and load file, given its full @var{path}."
