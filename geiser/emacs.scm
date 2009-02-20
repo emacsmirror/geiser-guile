@@ -39,11 +39,13 @@
   #:use-module (srfi srfi-1)
   #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
 
-(define (make-result result output)
-  (list (cons 'result result) (cons 'output output)))
+(define (write-result result output)
+  (write (list (cons 'result result) (cons 'output output)))
+  (newline))
 
-(define (error-handler key . args)
-  (list (cons 'error (apply parse-error (cons key args)))))
+(define (write-error key . args)
+  (write (list (cons 'error (apply parse-error (cons key args)))))
+  (newline))
 
 (define (parse-error key . args)
   (let* ((len (length args))
@@ -73,8 +75,8 @@ SUBR, MSG and REST."
                  (with-output-to-string
                    (lambda ()
                      (set! result (eval form module))))))
-            (make-result result output))))
-      error-handler)))
+            (write-result result output))))
+      write-error)))
 
 (define (ge:compile form module-name)
   "Compiles @var{form} in the module designated by @var{module-name}.
@@ -96,8 +98,8 @@ SUBR, MSG and REST."
                       (lambda ()
                         (set-current-module module)
                         (set! result (compile form))))))))
-            (make-result result output))))
-      error-handler)))
+            (write-result result output))))
+      write-error)))
 
 (define (ge:compile-file path)
   "Compile and load file, given its full @var{path}."
