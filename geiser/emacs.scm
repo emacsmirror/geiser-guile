@@ -37,15 +37,24 @@
                ge:module-children
                ge:module-location)
   #:use-module (srfi srfi-1)
+  #:use-module (system base compile)
   #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
 
 (define (write-result result output)
   (write (list (cons 'result result) (cons 'output output)))
   (newline))
 
-(define (write-error key . args)
-  (write (list (cons 'error (apply parse-error (cons key args)))))
+(define (write-error key args stack)
+  (write (list (cons 'error (apply parse-error (cons key args)))
+               (cons 'stack (parse-stack stack))))
   (newline))
+
+(define (parse-stack stack)
+  (if stack
+      (list
+       (with-output-to-string
+         (lambda () (display-backtrace stack (current-output-port)))))
+      '()))
 
 (define (parse-error key . args)
   (let* ((len (length args))
@@ -58,10 +67,11 @@
           (cons 'msg (if msg (apply format (cons #f (cons msg margs))) '()))
           (cons 'rest (or rest '())))))
 
-(define (evaluate form module evaluator)
+(define (evaluate form module-name evaluator)
   (let ((module (or (and (list? module-name)
                          (resolve-module module-name))
-                    (current-module))))
+                    (current-module)))
+        (captured-stack #f))
     (catch #t
       (lambda ()
         (let ((result #f))
@@ -69,7 +79,8 @@
                           (lambda ()
                             (set! result (evaluator form module))))))
             (write-result result output))))
-      write-error)))
+      (lambda (key . args) (write-error key args captured-stack))
+      (lambda (key . args) (set! captured-stack (make-stack #t))))))
 
 (define (eval-compile form module)
   (save-module-excursion
