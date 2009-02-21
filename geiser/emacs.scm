@@ -112,11 +112,13 @@ SUBR, MSG and REST."
 
 (define (ge:compile-file path)
   "Compile and load file, given its full @var{path}."
-  (and (compile-file path)
-       (load-compiled (compiled-file-name path))))
+  (evaluate `(and (compile-file ,path)
+                  (load-compiled ,(compiled-file-name path)))
+            '(geiser emacs)
+            eval))
 
 (define (ge:load-file path)
   "Load file, given its full @var{path}."
-  (compile-and-load path))
+  (evaluate `(compile-and-load ,path) '(geiser emacs) eval))
 
 ;;; emacs.scm ends here
