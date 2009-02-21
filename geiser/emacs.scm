@@ -40,14 +40,12 @@
   #:use-module (system base compile)
   #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
 
-(define (write-result result output)
-  (write (list (cons 'result result) (cons 'output output)))
-  (newline))
+(define (make-result result output)
+  (list (cons 'result result) (cons 'output output)))
 
-(define (write-error key args stack)
-  (write (list (cons 'error (apply parse-error (cons key args)))
-               (cons 'stack (parse-stack stack))))
-  (newline))
+(define (make-error key args stack)
+  (list (cons 'error (apply parse-error (cons key args)))
+        (cons 'stack (parse-stack stack))))
 
 (define (parse-stack stack)
   (if stack
@@ -71,16 +69,22 @@
   (let ((module (or (and (list? module-name)
                          (resolve-module module-name))
                     (current-module)))
-        (captured-stack #f))
-    (catch #t
-      (lambda ()
-        (let ((result #f))
-          (let ((output (with-output-to-string
-                          (lambda ()
-                            (set! result (evaluator form module))))))
-            (write-result result output))))
-      (lambda (key . args) (write-error key args captured-stack))
-      (lambda (key . args) (set! captured-stack (make-stack #t))))))
+        (result #f)
+        (captured-stack #f)
+        (error #f))
+    (let ((output
+           (with-output-to-string
+             (lambda ()
+               (set! result
+                     (catch #t
+                       (lambda ()
+                         (start-stack 'id (evaluator form module)))
+                       (lambda (key . args)
+                         (set! error (make-error key args captured-stack)))
+                       (lambda (key . args)
+                         (set! captured-stack (make-stack #t 2 2)))))))))
+      (write (or error (make-result result output)))
+      (newline))))
 
 (define (eval-compile form module)
   (save-module-excursion
