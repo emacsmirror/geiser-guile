@@ -64,13 +64,14 @@
         (else #f)))
 
 (define (symbol-module sym)
-  (call/cc
-   (lambda (k)
-     (apropos-fold (lambda (module name var init)
-                     (if (eq? name sym) (k (module-name module)) init))
-                   #f
-                   (symbol->string sym)
-                   (apropos-fold-accessible (current-module))))))
+  (and sym
+       (call/cc
+        (lambda (k)
+          (apropos-fold (lambda (module name var init)
+                          (if (eq? name sym) (k (module-name module)) init))
+                        #f
+                        (symbol->string sym)
+                        (apropos-fold-accessible (current-module)))))))
 
 (define (program-args program)
   (let* ((arity (program-arity program))

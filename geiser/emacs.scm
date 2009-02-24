@@ -38,6 +38,8 @@
                ge:module-location)
   #:use-module (srfi srfi-1)
   #:use-module (system base compile)
+  #:use-module (system vm program)
+  #:use-module (ice-9 debugger utils)
   #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
 
 (define (make-result result output)
@@ -49,10 +51,40 @@
 
 (define (parse-stack stack)
   (if stack
-      (list
-       (with-output-to-string
-         (lambda () (display-backtrace stack (current-output-port)))))
+      (map (lambda (n) (parse-frame (stack-ref stack n)))
+           (iota (stack-length stack)))
       '()))
+
+(define (parse-frame frame)
+  (list (cons 'frame (frame-number frame))
+        (cons 'procedure (or (and (frame-procedure? frame)
+                                  (procedure-name (frame-procedure frame)))
+                             '()))
+        (cons 'source (or (frame->source-position frame) '()))
+        (cons 'description (with-output-to-string
+                             (lambda ()
+                               (if (frame-procedure? frame)
+                                   (write-frame-short/application frame)
+                                   (write-frame-short/expression frame)))))))
+
+(define (frame->source-position frame)
+  (let ((source (if (frame-procedure? frame)
+                    (or (frame-source frame)
+                        (let ((proc (frame-procedure frame)))
+                          (and proc
+                               (procedure? proc)
+                               (procedure-source proc))))
+                    (frame-source frame))))
+    (and source
+         (cond ((string? (source-property source 'filename))
+                (list (source-property source 'filename)
+                      (+ 1 (source-property source 'line))
+                      (source-property source 'column)))
+               ((and (pair? source) (list? (cadr source)))
+                (list (caadr source)
+                      (+ 1 (caddr source))
+                      (cdddr source)))
+               (else #f)))))
 
 (define (parse-error key . args)
   (let* ((len (length args))
@@ -119,6 +151,6 @@ SUBR, MSG and REST."
 
 (define (ge:load-file path)
   "Load file, given its full @var{path}."
-  (evaluate `(compile-and-load ,path) '(geiser emacs) eval))
+  (evaluate `(load ,path) '(geiser emacs) eval))
 
 ;;; emacs.scm ends here
