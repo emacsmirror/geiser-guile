@@ -98,7 +98,7 @@
 
 (define (obj-args obj)
   (cond ((not obj) #f)
-        ((or (procedure? obj) (program? obj)) (procedure-arguments obj))
+        ((or (procedure? obj) (program? obj)) (arguments obj))
         ((macro? obj) (or (obj-args (macro-transformer obj))
                           '((required ...))))
         (else #f)))
@@ -112,6 +112,42 @@
                         #f
                         (regexp-quote (symbol->string sym))
                         (apropos-fold-accessible (current-module)))))))
+
+(define (gen-arg-names fst count)
+  (map (lambda (n) (string->symbol (format "arg-~A" (+ fst n))))
+       (iota (max count 1))))
+
+(define (arguments proc)
+  "Return an alist describing the arguments that `proc' accepts, or `#f'
+if the information cannot be obtained.
+
+The alist keys that are currently defined are `required', `optional',
+`keyword', and `rest'."
+  (cond
+   ((procedure-property proc 'arglist)
+    => (lambda (arglist)
+         `((required . ,(car arglist))
+           (optional . ,(cadr arglist))
+           (keyword . ,(caddr arglist))
+           (rest . ,(car (cddddr arglist))))))
+   ((procedure-source proc)
+    => (lambda (src)
+         (let ((formals (cadr src)))
+           (cond ((list? formals) `((required . ,formals)))
+                 ((pair? formals)
+                  `((required . ,(car formals)) (rest . ,(cdr formals))))
+                 (else #f)))))
+   (((@ (system vm program) program?) proc)
+    ((@ (system vm program) program-arguments) proc))
+   ((procedure-property proc 'arity)
+    => (lambda (art)
+         (let ((req (car art))
+               (opt (cadr art))
+               (rest (caddr art)))
+           `(,@(if (> req 0) (list (cons 'required (gen-arg-names 1 req))) '())
+             ,@(if (> opt 0) (list (cons 'optional (gen-arg-names (+ 1 req) opt))) '())
+             ,@(if rest (list (cons 'rest 'rest)) '())))))
+   (else #f)))
 
 (define (completions prefix)
   (sort! (map symbol->string
