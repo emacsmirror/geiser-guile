@@ -29,7 +29,7 @@
             ge:compile
             ge:compile-file
             ge:load-file)
-  #:re-export (ge:arguments
+  #:re-export (ge:autodoc
                ge:completions
                ge:symbol-location
                ge:symbol-documentation

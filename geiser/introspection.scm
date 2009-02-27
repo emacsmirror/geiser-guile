@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (geiser introspection)
-  #:export (arguments
+  #:export (autodoc
             completions
             symbol-location
             symbol-documentation
@@ -33,23 +33,63 @@
             module-children
             module-location)
   #:use-module (system vm program)
+  #:use-module (ice-9 regex)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
   #:use-module (srfi srfi-1))
 
-(define (arguments sym . syms)
-  (let loop ((sym sym) (syms syms))
-    (cond ((obj-args (symbol->obj sym)) => (lambda (args)
-                                             (cons sym (apply args-alist args))))
-          ((null? syms) #f)
-          (else (loop (car syms) (cdr syms))))))
+(define (autodoc form)
+  (cond ((null? form) #f)
+        ((symbol? form) (describe-application (list form)))
+        ((list? form)
+         (let ((lst (last form)))
+           (cond ((symbol? lst) (or (describe-application (list lst))
+                                    (describe-application form)))
+                 ((list? lst)
+                  (or (autodoc lst)
+                      (autodoc (map (lambda (s) (if (list? s) (gensym) s)) form))))
+                 (else (describe-application form)))))
+        (else #f)))
 
-(define (args-alist args opt module)
-  (list (cons 'required args)
-        (cons 'optional (or opt '()))
-        (cons 'module (cond ((module? module) (module-name module))
-                            ((list? module) module)
-                            (else '())))))
+(define (describe-application form)
+  (let* ((fun (car form))
+         (args (obj-args (symbol->obj fun))))
+    (and args
+         (list (cons 'signature (signature fun args))
+               (cons 'position (find-position args form))
+               (cons 'module (symbol-module fun))))))
+
+(define (signature fun args)
+  (let ((req (assq-ref args 'required))
+        (opt (assq-ref args 'optional))
+        (key (assq-ref args 'keyword))
+        (rest (assq-ref args 'rest)))
+    (let ((sgn `(,fun ,@(or req '())
+                      ,@(if opt (cons #:optional opt) '())
+                      ,@(if key (cons #:key key) '()))))
+      (if rest `(,@sgn . ,rest) sgn))))
+
+(define (find-position args form)
+  (let* ((lf (length form))
+         (lf-1 (- lf 1)))
+    (if (= 1 lf) 0
+        (let ((req (length (or (assq-ref args 'required) '())))
+              (opt (length (or (assq-ref args 'optional) '())))
+              (keys (map (lambda (k) (symbol->keyword (if (list? k) (car k) k)))
+                         (or (assq-ref args 'keyword) '())))
+              (rest (assq-ref args 'rest)))
+          (cond ((<= lf (+ 1 req)) lf-1)
+                ((<= lf (+ 1 req opt)) (if (> opt 0) lf lf-1))
+                ((or (memq (last form) keys)
+                     (memq (car (take-right form 2)) keys)) =>
+                 (lambda (sl)
+                   (+ 2 req
+                      (if (> opt 0) (+ 1 opt) 0)
+                      (- (length keys) (length sl)))))
+                (else (+ 1 req
+                         (if (> opt 0) (+ 1 opt) 0)
+                         (if (null? keys) 0 (+ 1 (length keys)))
+                         (if rest 1 0))))))))
 
 (define (symbol->obj sym)
   (and (symbol? sym)
@@ -58,9 +98,9 @@
 
 (define (obj-args obj)
   (cond ((not obj) #f)
-        ((program? obj) (program-args obj))
-        ((procedure? obj) (procedure-args obj))
-        ((macro? obj) (macro-args obj))
+        ((or (procedure? obj) (program? obj)) (procedure-arguments obj))
+        ((macro? obj) (or (obj-args (macro-transformer obj))
+                          '((required ...))))
         (else #f)))
 
 (define (symbol-module sym)
@@ -70,46 +110,8 @@
           (apropos-fold (lambda (module name var init)
                           (if (eq? name sym) (k (module-name module)) init))
                         #f
-                        (symbol->string sym)
+                        (regexp-quote (symbol->string sym))
                         (apropos-fold-accessible (current-module)))))))
-
-(define (program-args program)
-  (let* ((arity (program-arity program))
-         (arg-no (first arity))
-         (opt (> (second arity) 0))
-         (args (map first (take (program-bindings program) arg-no))))
-    (list (if opt (drop-right args 1) args)
-          (and opt (last args))
-          (program-module program))))
-
-(define (procedure-args proc)
-  (let ((name (procedure-name proc)))
-    (cond ((procedure-source proc) => (lambda (src)
-                                        (procedure-args-from-source name src)))
-          (else (let* ((arity (procedure-property proc 'arity))
-                       (req (first arity))
-                       (opt (third arity)))
-                  (list (map (lambda (n)
-                               (string->symbol (format "arg~A" (+ 1 n))))
-                             (iota req))
-                        (and opt 'rest)
-                        (and name (symbol-module name))))))))
-
-(define (procedure-args-from-source name src)
-  (let ((formals (cadr src)))
-    (cond ((list? formals) (list formals #f (symbol-module name)))
-          ((pair? formals) (let ((req (car formals))
-                                 (opt (cdr formals)))
-                             (list (if (list? req) req (list req))
-                                   opt
-                                   (symbol-module name))))
-          (else #f))))
-
-(define (macro-args macro)
-  (let ((prog (macro-transformer macro)))
-    (if prog
-        (obj-args prog)
-        (list '(...) #f #f))))
 
 (define (completions prefix)
   (sort! (map symbol->string
@@ -147,10 +149,8 @@
         (if doc (display doc))))))
 
 (define (obj-signature sym obj)
-  (let* ((args (obj-args obj))
-         (req (and args (car args)))
-         (opt (and args (cadr args))))
-    (and args (if (not opt) `(,sym ,@req) `(,sym ,@req . ,opt)))))
+  (let ((args (obj-args obj)))
+    (and args (signature sym args))))
 
 (define (symbol-documentation sym)
   (let ((obj (symbol->obj sym)))
