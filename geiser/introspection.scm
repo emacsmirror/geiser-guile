@@ -67,7 +67,7 @@
     (let ((sgn `(,fun ,@(or req '())
                       ,@(if opt (cons #:optional opt) '())
                       ,@(if key (cons #:key key) '()))))
-      (if rest `(,@sgn . ,rest) sgn))))
+      (if rest `(,@sgn #:rest ,rest) sgn))))
 
 (define (find-position args form)
   (let* ((lf (length form))
@@ -89,7 +89,7 @@
                 (else (+ 1 req
                          (if (> opt 0) (+ 1 opt) 0)
                          (if (null? keys) 0 (+ 1 (length keys)))
-                         (if rest 1 0))))))))
+                         (if rest 2 0))))))))
 
 (define (symbol->obj sym)
   (and (symbol? sym)
