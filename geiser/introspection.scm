@@ -118,11 +118,6 @@
        (iota (max count 1))))
 
 (define (arguments proc)
-  "Return an alist describing the arguments that `proc' accepts, or `#f'
-if the information cannot be obtained.
-
-The alist keys that are currently defined are `required', `optional',
-`keyword', and `rest'."
   (cond
    ((procedure-property proc 'arglist)
     => (lambda (arglist)
