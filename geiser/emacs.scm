@@ -27,6 +27,7 @@
 (define-module (geiser emacs)
   #:export (ge:eval
             ge:compile
+            ge:macroexpand
             ge:compile-file
             ge:load-file)
   #:re-export (ge:autodoc
@@ -140,5 +141,9 @@
 (define (ge:load-file path)
   "Load file, given its full @var{path}."
   (evaluate `(load ,path) #f eval))
+
+(define (ge:macroexpand form . all)
+  (let ((all (and (not (null? all)) (car all))))
+    ((if all macroexpand macroexpand-1) form)))
 
 ;;; emacs.scm ends here
