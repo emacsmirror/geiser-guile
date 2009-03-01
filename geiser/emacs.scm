@@ -41,6 +41,7 @@
   #:use-module (system base compile)
   #:use-module (system vm program)
   #:use-module (ice-9 debugger utils)
+  #:use-module (ice-9 pretty-print)
   #:use-module ((geiser introspection) :renamer (symbol-prefix-proc 'ge:)))
 
 (define (make-result result output)
@@ -144,6 +145,8 @@
 
 (define (ge:macroexpand form . all)
   (let ((all (and (not (null? all)) (car all))))
-    ((if all macroexpand macroexpand-1) form)))
+    (with-output-to-string
+      (lambda ()
+        (pretty-print ((if all macroexpand macroexpand-1) form))))))
 
 ;;; emacs.scm ends here
