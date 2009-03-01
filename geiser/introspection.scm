@@ -47,8 +47,8 @@
            (cond ((symbol? lst) (or (describe-application (list lst))
                                     (describe-application form)))
                  ((pair? lst)
-                  (or (autodoc lst)
-                      (autodoc (map (lambda (s) (if (list? s) (gensym) s)) form))))
+                  (or (autodoc (pair->list lst))
+                      (autodoc (map (lambda (s) (if (pair? s) (gensym) s)) form))))
                  (else (describe-application form)))))
         (else #f)))
 
