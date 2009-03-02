@@ -1,4 +1,4 @@
-;; introspection.scm -- name says it all
+;; doc.scm -- name says it all
 
 ;; Copyright (C) 2009 Jose Antonio Ortega Ruiz
 
@@ -20,20 +20,16 @@
 
 ;;; Comentary:
 
-;; Procedures introspecting on scheme objects and their properties.
+;; Procedures providing documentation on scheme objects.
 
 ;;; Code:
 
-(define-module (geiser introspection)
+(define-module (geiser doc)
   #:export (autodoc
-            completions
-            symbol-location
-            symbol-documentation
-            all-modules
-            module-children
-            module-location)
+            symbol-documentation)
+  #:use-module (geiser utils)
+  #:use-module (geiser modules)
   #:use-module (system vm program)
-  #:use-module (ice-9 regex)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
   #:use-module (oop goops)
@@ -55,17 +51,11 @@
 
 (define (describe-application form)
   (let* ((fun (car form))
-         (args (obj-args (symbol->obj fun))))
+         (args (obj-args (symbol->object fun))))
     (and args
          (list (cons 'signature (signature fun args))
                (cons 'position (find-position args form))
                (cons 'module (symbol-module fun))))))
-
-(define (pair->list pair)
-  (let loop ((d pair) (s '()))
-    (cond ((null? d) (reverse! s))
-          ((symbol? d) (reverse! (cons d s)))
-          (else (loop (cdr d) (cons (car d) s))))))
 
 (define (arglst args kind)
   (let ((args (assq-ref args kind)))
@@ -104,21 +94,6 @@
                          (if (> opt 0) (+ 1 opt) 0)
                          (if (null? keys) 0 (+ 1 (length keys)))
                          (if rest 2 0))))))))
-
-(define (symbol-module sym)
-  (and sym
-       (call/cc
-        (lambda (k)
-          (apropos-fold (lambda (module name var init)
-                          (if (eq? name sym) (k (module-name module)) init))
-                        #f
-                        (regexp-quote (symbol->string sym))
-                        (apropos-fold-accessible (current-module)))))))
-
-(define (symbol->obj sym)
-  (and (symbol? sym)
-       (module-defined? (current-module) sym)
-       (module-ref (current-module) sym)))
 
 (define (obj-args obj)
   (cond ((not obj) #f)
@@ -178,41 +153,11 @@
           ((not (null? srcs)) (source->args (car (sort! srcs src>))))
           (else '((rest . rest))))))
 
-(define (completions prefix . context)
-  (let ((context (and (not (null? context)) (car context)))
-        (prefix (string-append "^" (regexp-quote prefix))))
-    (append (filter (lambda (s) (string-match prefix s))
-                    (map symbol->string (local-bindings context)))
-            (sort! (map symbol->string (apropos-internal prefix)) string<?))))
-
-(define (local-bindings form)
-  (define (body f) (if (> (length f) 2) (cddr f) '()))
-  (let loop ((form form) (bindings '()))
-    (cond ((not (pair? form)) bindings)
-          ((list? (car form))
-           (loop (cdr form) (append (local-bindings (car form)) bindings)))
-          ((and (list? form) (< (length form) 2)) bindings)
-          ((memq (car form) '(define define* lambda))
-           (loop (body form) (append (pair->list (cadr form)) bindings)))
-          ((and (memq (car form) '(let let* letrec letrec*))
-                (list? (cadr form)))
-           (loop (body form) (append (map car (cadr form)) bindings)))
-          ((and (eq? 'let (car form)) (symbol? (cadr form)))
-           (loop (cons 'let (body form)) (cons (cadr form) bindings)))
-          (else (loop (cdr form) bindings)))))
-
-(define (module-location name)
-  (make-location (module-filename name) #f))
-
-(define (symbol-location sym)
-  (cond ((symbol-module sym) => module-location)
-        (else '())))
-
-(define (make-location file line)
-  (list (cons 'file (if (string? file) file '()))
-        (cons 'line (if (number? line) (+ 1 line) '()))))
-
-(define module-filename (@@ (ice-9 session) module-filename))
+(define (symbol-documentation sym)
+  (let ((obj (symbol->object sym)))
+    (if obj
+        `((signature . ,(or (obj-signature sym obj) sym))
+          (docstring . ,(docstring sym obj))))))
 
 (define (docstring sym obj)
   (with-output-to-string
@@ -235,64 +180,4 @@
   (let ((args (obj-args obj)))
     (and args (signature sym args))))
 
-(define (symbol-documentation sym)
-  (let ((obj (symbol->obj sym)))
-    (if obj
-        `((signature . ,(or (obj-signature sym obj) sym))
-          (docstring . ,(docstring sym obj))))))
-
-(define (all-modules)
-  (let ((roots ((@@ (ice-9 session) root-modules))))
-    (sort! (map (lambda (m)
-                  (format "~A" (module-name m)))
-                (fold (lambda (m all)
-                        (append (all-child-modules m) all))
-                      roots
-                      roots))
-           string<?)))
-
-(define (child-modules mod)
-  (delq mod ((@@ (ice-9 session) submodules) mod)))
-
-(define (all-child-modules mod)
-  (let ((children (child-modules mod)))
-    (fold (lambda (m all)
-            (append (all-child-modules m) all))
-          children children)))
-
-(define (module-children mod-name)
-  (let* ((elts (hash-fold classify-module-object
-                          (list '() '() '())
-                          (module-obarray (maybe-module-interface mod-name))))
-         (elts (map sort-symbols! elts)))
-    (list (cons 'modules (map (lambda (m) `(,@mod-name ,m)) (car elts)))
-          (cons 'procs (cadr elts))
-          (cons 'vars (caddr elts)))))
-
-(define (sort-symbols! syms)
-  (let ((cmp (lambda (l r)
-               (string<? (symbol->string l) (symbol->string r)))))
-    (sort! syms cmp)))
-
-(define (maybe-module-interface mod-name)
-  (catch #t
-         (lambda () (resolve-interface mod-name))
-         (lambda args (resolve-module mod-name))))
-
-(define (classify-module-object name var elts)
-  (let ((obj (and (variable-bound? var)
-                  (variable-ref var))))
-    (cond ((not obj) elts)
-          ((and (module? obj) (eq? (module-kind obj) 'directory))
-           (list (cons name (car elts))
-                 (cadr elts)
-                 (caddr elts)))
-          ((or (procedure? obj) (program? obj) (macro? obj))
-           (list (car elts)
-                 (cons name (cadr elts))
-                 (caddr elts)))
-          (else (list (car elts)
-                      (cadr elts)
-                      (cons name (caddr elts)))))))
-
-;;; introspection.scm ends here
+;;; doc.scm ends here
