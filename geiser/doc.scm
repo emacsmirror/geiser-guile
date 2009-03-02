@@ -44,7 +44,7 @@
            (cond ((symbol? lst) (or (describe-application (list lst))
                                     (describe-application form)))
                  ((pair? lst)
-                  (or (autodoc (pair->list lst))
+                  (or (and (not (eq? (car lst) 'quote)) (autodoc (pair->list lst)))
                       (autodoc (map (lambda (s) (if (pair? s) (gensym) s)) form))))
                  (else (describe-application form)))))
         (else #f)))
@@ -127,8 +127,11 @@
       ,@(if rest (list (cons 'rest 'rest)) '()))))
 
 (define (gen-arg-names fst count)
-  (map (lambda (n) (string->symbol (format "arg-~A" (+ fst n))))
-       (iota (max count 1))))
+  (let* ((letts (list->vector '(#\x #\y #\z #\u #\v #\w #\t)))
+         (len (vector-length letts))
+         (lett (lambda (n) (vector-ref letts (modulo n len)))))
+    (map (lambda (n) (string->symbol (format "~A" (lett (+ fst n -1)))))
+         (iota (max count 1)))))
 
 (define (arglist->args arglist)
   `((required . ,(car arglist))
