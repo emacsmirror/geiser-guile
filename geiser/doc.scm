@@ -143,9 +143,10 @@
 
 (define (doc->args doc)
   (define proc-rx "-- Scheme Procedure: ([^[\n]+)\n")
-  (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[\n]+]+)?)")
+  (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[^\n]+\\]+)?)")
   (and doc
-       (let ((match (or (string-match proc-rx doc) (string-match proc-rx2 doc))))
+       (let ((match (or (string-match proc-rx doc)
+                        (string-match proc-rx2 doc))))
          (and match (parse-signature-string (match:substring match 1))))))
 
 (define (parse-signature-string str)
@@ -155,11 +156,12 @@
     (if (< (length tokens) 2)
         '()
         (let loop ((tokens (cdr tokens)) (req '()) (opt '()) (rest #f))
-          (cond ((null? tokens) `((required ,@(map string->symbol (reverse! req)))
-                                  (optional ,@(map string->symbol (reverse! opt)))
-                                  ,@(if rest
-                                        (list (cons 'rest (string->symbol rest)))
-                                        '())))
+          (cond ((null? tokens)
+                 `((required ,@(map string->symbol (reverse! req)))
+                   (optional ,@(map string->symbol (reverse! opt)))
+                   ,@(if rest
+                         (list (cons 'rest (string->symbol rest)))
+                         '())))
                 ((string=? "." (car tokens))
                  (if (not (null? (cdr tokens)))
                      (loop (cddr tokens) req opt (cadr tokens))
@@ -167,7 +169,10 @@
                 ((or (string-match opt-arg-rx (car tokens))
                      (string-match opt-arg-rx2 (car tokens)))
                  => (lambda (m)
-                      (loop (cdr tokens) req (cons (match:substring m 1) opt) rest)))
+                      (loop (cdr tokens)
+                            req
+                            (cons (match:substring m 1) opt)
+                            rest)))
                 (else (loop (cdr tokens) (cons (car tokens) req) opt rest)))))))
 
 (define (generic-args gen)
