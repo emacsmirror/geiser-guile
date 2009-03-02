@@ -32,6 +32,7 @@
   #:use-module (system vm program)
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
+  #:use-module (ice-9 regex)
   #:use-module (oop goops)
   #:use-module (srfi srfi-1))
 
@@ -108,6 +109,7 @@
    ((procedure-property proc 'arglist) => arglist->args)
    ((procedure-source proc) => source->args)
    ((program? proc) ((@ (system vm program) program-arguments) proc))
+   ((doc->args (object-documentation proc)))
    ((procedure-property proc 'arity) => arity->args)
    (else #f)))
 
@@ -138,6 +140,35 @@
     (optional . ,(cadr arglist))
     (keyword . ,(caddr arglist))
     (rest . ,(car (cddddr arglist)))))
+
+(define (doc->args doc)
+  (define proc-rx "-- Scheme Procedure: ([^[\n]+)\n")
+  (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[\n]+]+)?)")
+  (and doc
+       (let ((match (or (string-match proc-rx doc) (string-match proc-rx2 doc))))
+         (and match (parse-signature-string (match:substring match 1))))))
+
+(define (parse-signature-string str)
+  (define opt-arg-rx "\\[([^] ]+)\\]?")
+  (define opt-arg-rx2 "([^ ])+\\]+")
+  (let ((tokens (string-tokenize str)))
+    (if (< (length tokens) 2)
+        '()
+        (let loop ((tokens (cdr tokens)) (req '()) (opt '()) (rest #f))
+          (cond ((null? tokens) `((required ,@(map string->symbol (reverse! req)))
+                                  (optional ,@(map string->symbol (reverse! opt)))
+                                  ,@(if rest
+                                        (list (cons 'rest (string->symbol rest)))
+                                        '())))
+                ((string=? "." (car tokens))
+                 (if (not (null? (cdr tokens)))
+                     (loop (cddr tokens) req opt (cadr tokens))
+                     (loop '() req opt "rest")))
+                ((or (string-match opt-arg-rx (car tokens))
+                     (string-match opt-arg-rx2 (car tokens)))
+                 => (lambda (m)
+                      (loop (cdr tokens) req (cons (match:substring m 1) opt) rest)))
+                (else (loop (cdr tokens) (cons (car tokens) req) opt rest)))))))
 
 (define (generic-args gen)
   (define (src> src1 src2)
