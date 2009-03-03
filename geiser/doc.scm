@@ -45,7 +45,8 @@
            (cond ((symbol? lst) (or (describe-application (list lst))
                                     (describe-application form)))
                  ((pair? lst)
-                  (or (and (not (eq? (car lst) 'quote)) (autodoc (pair->list lst)))
+                  (or (and (not (memq (car lst) '(quote quasiquote)))
+                           (autodoc (pair->list lst)))
                       (autodoc (map (lambda (s) (if (pair? s) (gensym) s)) form))))
                  (else (describe-application form)))))
         (else #f)))
@@ -109,7 +110,7 @@
    ((procedure-property proc 'arglist) => arglist->args)
    ((procedure-source proc) => source->args)
    ((program? proc) ((@ (system vm program) program-arguments) proc))
-   ((doc->args (object-documentation proc)))
+   ((doc->args proc))
    ((procedure-property proc 'arity) => arity->args)
    (else #f)))
 
@@ -141,13 +142,19 @@
     (keyword . ,(caddr arglist))
     (rest . ,(car (cddddr arglist)))))
 
-(define (doc->args doc)
+(define (doc->args proc)
   (define proc-rx "-- Scheme Procedure: ([^[\n]+)\n")
   (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[^\n]+\\]+)?)")
-  (and doc
-       (let ((match (or (string-match proc-rx doc)
-                        (string-match proc-rx2 doc))))
-         (and match (parse-signature-string (match:substring match 1))))))
+  (cond ((procedure-property proc 'geiser-document-args))
+        ((object-documentation proc)
+         => (lambda (doc)
+              (let* ((match (or (string-match proc-rx doc)
+                                (string-match proc-rx2 doc)))
+                     (args (and match
+                                (parse-signature-string (match:substring match 1)))))
+                (set-procedure-property! proc 'geiser-document-args args)
+                args)))
+        (else #f)))
 
 (define (parse-signature-string str)
   (define opt-arg-rx "\\[([^] ]+)\\]?")
