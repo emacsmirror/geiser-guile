@@ -45,7 +45,7 @@
            (cond ((symbol? lst) (or (describe-application (list lst))
                                     (describe-application form)))
                  ((pair? lst)
-                  (or (and (not (memq (car lst) '(quote quasiquote)))
+                  (or (and (not (memq (car lst) '(quote)))
                            (autodoc (pair->list lst)))
                       (autodoc (map (lambda (s) (if (pair? s) (gensym) s)) form))))
                  (else (describe-application form)))))
