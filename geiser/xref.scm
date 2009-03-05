@@ -51,7 +51,8 @@
         '())))
 
 (define (program-location p)
-  (cond ((program-source p 0) =>
+  (cond ((not (program? p)) '())
+        ((program-source p 0) =>
          (lambda (s) (make-location (program-path p) (source:line s))))
         ((program-path p) =>
          (lambda (s) (make-location (program-path p) #f)))
