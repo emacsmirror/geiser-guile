@@ -26,7 +26,8 @@
 
 (define-module (geiser doc)
   #:export (autodoc
-            symbol-documentation)
+            symbol-documentation
+            object-signature)
   #:use-module (geiser utils)
   #:use-module (geiser modules)
   #:use-module (system vm program)
@@ -50,6 +51,10 @@
                       (autodoc (map (lambda (s) (if (pair? s) (gensym) s)) form))))
                  (else (describe-application form)))))
         (else #f)))
+
+(define (object-signature name obj)
+  (let ((args (obj-args obj)))
+    (and args (signature name args))))
 
 (define (describe-application form)
   (let* ((fun (car form))

@@ -28,10 +28,38 @@
   #:export (symbol-location
             generic-methods)
   #:use-module (geiser utils)
-  #:use-module (geiser modules))
+  #:use-module (geiser modules)
+  #:use-module (geiser doc)
+  #:use-module (oop goops)
+  #:use-module (system vm program))
 
 (define (symbol-location sym)
   (cond ((symbol-module sym) => module-location)
         (else '())))
+
+(define (generic-methods sym)
+  (let* ((gen (symbol->object sym))
+         (methods (if (is-a? gen <generic>) (generic-function-methods gen) '())))
+    (filter (lambda (x) (not (null? x)))
+            (map (lambda (m) (describe-method sym m)) methods))))
+
+(define (describe-method name m)
+  (let ((proc (method-procedure m)))
+    (if proc
+        `((location . ,(program-location proc))
+          (signature . ,(object-signature name proc)))
+        '())))
+
+(define (program-location p)
+  (cond ((program-source p 0) =>
+         (lambda (s) (make-location (program-path p) (source:line s))))
+        ((program-path p) =>
+         (lambda (s) (make-location (program-path p) #f)))
+        (else '())))
+
+(define (program-path p)
+  (let* ((mod (program-module p))
+         (name (and mod (module-name mod))))
+    (and name (module-filename name))))
 
 ;;; xref.scm ends here
