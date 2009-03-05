@@ -37,13 +37,16 @@
 
 (define (symbol-module sym)
   (and sym
-       (call/cc
-        (lambda (k)
-          (apropos-fold (lambda (module name var init)
-                          (if (eq? name sym) (k (module-name module)) init))
-                        #f
-                        (regexp-quote (symbol->string sym))
-                        (apropos-fold-accessible (current-module)))))))
+       (catch 'module-name
+         (lambda ()
+           (apropos-fold (lambda (module name var init)
+                           (if (eq? name sym)
+                               (throw 'module-name (module-name module)) init))
+                         #f
+                         (regexp-quote (symbol->string sym))
+                         (apropos-fold-accessible (current-module))))
+         (lambda (key . args)
+           (and (eq? key 'module-name) (car args))))))
 
 (define (module-location name)
   (make-location (module-filename name) #f))
