@@ -46,17 +46,17 @@
 (define (describe-method name m)
   (let ((proc (method-procedure m)))
     (if proc
-        `((location . ,(program-location proc))
+        `((location . ,(or (program-location proc) (symbol-location name)))
           (signature . ,(object-signature name proc)))
         '())))
 
 (define (program-location p)
-  (cond ((not (program? p)) '())
+  (cond ((not (program? p)) #f)
         ((program-source p 0) =>
          (lambda (s) (make-location (program-path p) (source:line s))))
         ((program-path p) =>
          (lambda (s) (make-location (program-path p) #f)))
-        (else '())))
+        (else #f)))
 
 (define (program-path p)
   (let* ((mod (program-module p))
