@@ -138,8 +138,8 @@
   (let* ((letts (list->vector '(#\x #\y #\z #\u #\v #\w #\t)))
          (len (vector-length letts))
          (lett (lambda (n) (vector-ref letts (modulo n len)))))
-    (map (lambda (n) (string->symbol (format "~A" (lett (+ fst n -1)))))
-         (iota (max count 1)))))
+    (map (lambda (n) (string->symbol (format "~A" (lett (- n 1)))))
+         (iota (max count 1) fst))))
 
 (define (arglist->args arglist)
   `((required . ,(car arglist))
