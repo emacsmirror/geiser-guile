@@ -37,33 +37,26 @@
   #:use-module (oop goops)
   #:use-module (srfi srfi-1))
 
-(define placeholder (gensym))
-
 (define (autodoc form)
-  (cond ((or (eq? form placeholder) (null? form)) #f)
+  (cond ((null? form) #f)
         ((symbol? form) (describe-application (list form)))
         ((not (pair? form)) #f)
         ((not (list? form)) (autodoc (pair->list form)))
         ((define-head? form) => autodoc)
-        (else
-         (let ((lst (last form)))
-           (cond ((and (symbol? lst) (describe-application (list lst))))
-                 ((and (pair? lst) (not (memq (car lst) '(quote))) (autodoc lst)))
-                 ((pair? lst) (autodoc (flatten-last form)))
-                 (else (describe-application form)))))))
+        (else (autodoc/list form))))
 
-(define (flatten-last form)
-  (reverse! (cons placeholder (cdr (reverse! form)))))
+(define (autodoc/list form)
+  (let ((lst (last form)))
+    (cond ((and (symbol? lst) (describe-application (list lst))))
+          ((and (pair? lst) (not (memq (car lst) '(quote))) (autodoc lst)))
+          (else (describe-application form)))))
 
 (define (define-head? form)
-  (define def-heads '(define define* define-macro define-macro* define-method))
+  (define defforms '(define define* define-macro define-macro*
+                      define-method define-class define-generic))
   (and (= 2 (length form))
-       (memq (car form) def-heads)
+       (memq (car form) defforms)
        (car form)))
-
-(define (object-signature name obj)
-  (let ((args (obj-args obj)))
-    (and args (signature name args))))
 
 (define (describe-application form)
   (let* ((fun (car form))
@@ -73,11 +66,9 @@
                (cons 'position (find-position args form))
                (cons 'module (symbol-module fun))))))
 
-(define (arglst args kind)
-  (let ((args (assq-ref args kind)))
-    (cond ((or (not args) (null? args)) '())
-          ((list? args) args)
-          (else (list args)))))
+(define (object-signature name obj)
+  (let ((args (obj-args obj)))
+    (and args (signature name args))))
 
 (define (signature fun args)
   (let ((req (arglst args 'required))
@@ -110,6 +101,12 @@
                          (if (> opt 0) (+ 1 opt) 0)
                          (if (null? keys) 0 (+ 1 (length keys)))
                          (if rest 2 0))))))))
+
+(define (arglst args kind)
+  (let ((args (assq-ref args kind)))
+    (cond ((or (not args) (null? args)) '())
+          ((list? args) args)
+          (else (list args)))))
 
 (define (obj-args obj)
   (cond ((not obj) #f)
