@@ -48,7 +48,7 @@
         (else
          (let ((lst (last form)))
            (cond ((and (symbol? lst) (describe-application (list lst))))
-                 ((and (pair? lst) (not (memq (car lst) '(quote)))) (autodoc lst))
+                 ((and (pair? lst) (not (memq (car lst) '(quote))) (autodoc lst)))
                  ((pair? lst) (autodoc (flatten-last form)))
                  (else (describe-application form)))))))
 
