@@ -111,8 +111,7 @@
 (define (obj-args obj)
   (cond ((not obj) #f)
         ((or (procedure? obj) (program? obj)) (arguments obj))
-        ((macro? obj) (or (obj-args (macro-transformer obj))
-                          '((required ...))))
+        ((macro? obj) (or (obj-args (macro-transformer obj)) '((required ...))))
         (else #f)))
 
 (define (arguments proc)
