@@ -57,10 +57,19 @@
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file))))
-  `("-p" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+  `("-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 (defconst geiser-guile-prompt-regexp "^[^() \n]+@([^)]*?)> ")
+
+(defun switch-to-guile (&optional ask)
+  (interactive "P")
+  (switch-to-geiser ask 'guile))
+
+(defun run-guile ()
+  "Run Geiser using Guile."
+  (interactive)
+  (run-geiser 'guile))
 
 
 ;;; Evaluation support:
