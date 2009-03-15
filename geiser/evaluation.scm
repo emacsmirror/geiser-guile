@@ -95,6 +95,8 @@
   (let ((module (or (and (list? module-name)
                          (resolve-module module-name))
                     (current-module)))
+        (evaluator (lambda (f m)
+                     (call-with-values (lambda () (evaluator f m)) list)))
         (result #f)
         (captured-stack #f)
         (error #f))
