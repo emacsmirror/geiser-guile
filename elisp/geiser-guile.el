@@ -41,7 +41,7 @@
         ((eq system-type 'darwin) "guile")
         (t "guile"))
   "Name to use to call the Guile executable when starting a REPL."
-  :type 'string
+  :type '(choice string (repeat string))
   :group 'geiser-guile)
 
 (defcustom geiser-guile-init-file "~/.guile-geiser"
@@ -52,12 +52,16 @@
 
 ;;; REPL support:
 
+(defun geiser-guile-binary ()
+  (if (listp geiser-guile-binary) (car geiser-guile-binary) geiser-guile-binary))
+
 (defun geiser-guile-parameters ()
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file))))
-  `("-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+  `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
+    "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 (defconst geiser-guile-prompt-regexp "^[^() \n]+@([^)]*?)> ")
