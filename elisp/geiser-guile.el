@@ -102,7 +102,7 @@ If MODULE is provided, transform it to such a datum."
 
 (defun geiser-guile-guess ()
   "Return `t' if the current buffer looks like a Guile file."
-  (and (geiser-guile-get-module) t))
+  (listp (geiser-guile-get-module)))
 
 
 ;;; Register this implementation:
