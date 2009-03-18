@@ -26,11 +26,14 @@
 
 (define-module (geiser xref)
   #:export (symbol-location
-            generic-methods)
+            generic-methods
+            callers
+            callees)
   #:use-module (geiser utils)
   #:use-module (geiser modules)
   #:use-module (geiser doc)
   #:use-module (oop goops)
+  #:use-module (system xref)
   #:use-module (system vm program))
 
 (define (symbol-location sym)
@@ -41,14 +44,15 @@
   (let* ((gen (symbol->object sym))
          (methods (if (is-a? gen <generic>) (generic-function-methods gen) '())))
     (filter (lambda (x) (not (null? x)))
-            (map (lambda (m) (describe-method sym m)) methods))))
+            (map (lambda (m)
+                   (make-xref (method-procedure m) sym (symbol-module sym)))
+                 methods))))
 
-(define (describe-method name m)
-  (let ((proc (method-procedure m)))
-    (if proc
-        `((location . ,(or (program-location proc) (symbol-location name)))
-          (signature . ,(object-signature name proc)))
-        '())))
+(define (make-xref proc name module)
+  (and proc
+       `((location . ,(or (program-location proc) (symbol-location name)))
+         (signature . ,(object-signature name proc))
+         (module . ,module))))
 
 (define (program-location p)
   (cond ((not (program? p)) #f)
@@ -62,5 +66,19 @@
   (let* ((mod (program-module p))
          (name (and mod (module-name mod))))
     (and name (module-filename name))))
+
+(define (procedure-xref proc)
+  (let ((name (procedure-name proc)))
+    (make-xref proc name (symbol-module name))))
+
+(define (callers sym)
+  (let ((mod (symbol-module sym)))
+    (and mod
+         (map procedure-xref (procedure-callers (cons mod sym))))))
+
+(define (callees sym)
+  (let ((obj (symbol->object sym)))
+    (and obj
+         (map procedure-xref (procedure-callees obj)))))
 
 ;;; xref.scm ends here

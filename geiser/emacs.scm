@@ -37,7 +37,9 @@
                ge:symbol-documentation
                ge:all-modules
                ge:module-children
-               ge:module-location)
+               ge:module-location
+               ge:callers
+               ge:callees)
   #:use-module (geiser evaluation)
   #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))
