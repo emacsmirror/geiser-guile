@@ -49,6 +49,13 @@
   :type 'string
   :group 'geiser-guile)
 
+(defcustom geiser-guile-use-compiler-in-eval t
+  "When enable, always use Guile's compiler to perform evaluation.
+Recommended, since the compiler usually collects better metadata
+than the interpreter."
+  :type 'boolean
+  :group 'geiser-guile)
+
 
 ;;; REPL support:
 
@@ -82,7 +89,11 @@ This function uses `geiser-guile-init-file' if it exists."
   "Translate a bare procedure symbol to one executable in Guile's
 context. Return NULL for unsupported ones; at the very least,
 EVAL, COMPILE, LOAD-FILE and COMPILE-FILE should be supported."
-  (let ((proc (intern (format "ge:%s" proc))))
+  (let ((proc (intern (format "ge:%s"
+                              (if (and geiser-guile-use-compiler-in-eval
+                                       (eq proc 'eval))
+                                  'compile
+                                proc)))))
     `(@ (geiser emacs) ,proc)))
 
 (defconst geiser-guile--module-re
