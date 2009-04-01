@@ -72,7 +72,7 @@
     (make-xref proc name (symbol-module name))))
 
 (define (callers sym)
-  (let ((mod (symbol-module sym)))
+  (let ((mod (symbol-module sym #t)))
     (and mod
          (map procedure-xref (procedure-callers (cons mod sym))))))
 

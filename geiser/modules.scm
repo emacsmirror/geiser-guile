@@ -35,7 +35,7 @@
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
 
-(define (symbol-module sym)
+(define (symbol-module sym . all)
   (and sym
        (catch 'module-name
          (lambda ()
@@ -44,7 +44,9 @@
                                (throw 'module-name (module-name module)) init))
                          #f
                          (regexp-quote (symbol->string sym))
-                         (apropos-fold-accessible (current-module))))
+                         (if (or (null? all) (not (car all)))
+                             (apropos-fold-accessible (current-module))
+                             apropos-fold-all)))
          (lambda (key . args)
            (and (eq? key 'module-name) (car args))))))
 
