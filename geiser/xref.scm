@@ -52,7 +52,7 @@
   (and proc
        `((location . ,(or (program-location proc) (symbol-location name)))
          (signature . ,(object-signature name proc))
-         (module . ,module))))
+         (module . ,(or module '())))))
 
 (define (program-location p)
   (cond ((not (program? p)) #f)
