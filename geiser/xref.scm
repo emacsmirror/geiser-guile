@@ -42,7 +42,9 @@
 
 (define (generic-methods sym)
   (let* ((gen (symbol->object sym))
-         (methods (if (is-a? gen <generic>) (generic-function-methods gen) '())))
+         (methods (if (is-a? gen <generic>)
+                      (generic-function-methods gen)
+                      '())))
     (filter (lambda (x) (not (null? x)))
             (map (lambda (m)
                    (make-xref (method-procedure m) sym (symbol-module sym)))
@@ -67,14 +69,21 @@
          (name (and mod (module-name mod))))
     (and name (module-filename name))))
 
-(define (procedure-xref proc)
-  (let ((name (procedure-name proc)))
-    (make-xref proc name (symbol-module name))))
+(define (procedure-xref proc . mod-name)
+  (let ((proc-name (or (procedure-name proc) '<anonymous>))
+        (mod-name (if (null? mod-name)
+                      (symbol-module name)
+                      (car mod-name))))
+    (make-xref proc proc-name mod-name)))
 
 (define (callers sym)
   (let ((mod (symbol-module sym #t)))
     (and mod
-         (map procedure-xref (procedure-callers (cons mod sym))))))
+         (apply append (map (lambda (procs)
+                              (map (lambda (proc)
+                                     (procedure-xref proc (car procs)))
+                                   (cdr procs)))
+                            (procedure-callers (cons mod sym)))))))
 
 (define (callees sym)
   (let ((obj (symbol->object sym)))
