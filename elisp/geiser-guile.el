@@ -112,6 +112,12 @@ If MODULE is provided, transform it to such a datum."
         ((stringp module) (or (ignore-errors (car (read-from-string module))) :f))
         (t :f)))
 
+(defun geiser-guile-symbol-begin (module)
+  (if module
+      (max (save-excursion (beginning-of-line) (point))
+           (save-excursion (skip-syntax-backward "^(>") (1- (point))))
+    (save-excursion (skip-syntax-backward "^-()>") (point))))
+
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
 
