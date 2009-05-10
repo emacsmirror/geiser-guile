@@ -32,10 +32,10 @@
                ge:load-file
                ge:autodoc
                ge:completions
+               ge:module-completions
                ge:symbol-location
                ge:generic-methods
                ge:symbol-documentation
-               ge:all-modules
                ge:module-children
                ge:module-location
                ge:callers

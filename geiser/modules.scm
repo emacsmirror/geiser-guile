@@ -57,13 +57,12 @@
 
 (define (all-modules)
   (let ((roots ((@@ (ice-9 session) root-modules))))
-    (sort! (map (lambda (m)
-                  (format "~A" (module-name m)))
-                (fold (lambda (m all)
-                        (append (all-child-modules m) all))
-                      roots
-                      roots))
-           string<?)))
+    (map (lambda (m)
+           (format "~A" (module-name m)))
+         (fold (lambda (m all)
+                 (append (all-child-modules m) all))
+               roots
+               roots))))
 
 (define (module-children mod-name)
   (let* ((elts (hash-fold classify-module-object

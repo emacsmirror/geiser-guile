@@ -25,8 +25,9 @@
 ;;; Code:
 
 (define-module (geiser completion)
-  #:export (completions)
+  #:export (completions module-completions)
   #:use-module (geiser utils)
+  #:use-module (geiser modules)
   #:use-module (ice-9 session)
   #:use-module (ice-9 regex))
 
@@ -52,5 +53,11 @@
           ((and (eq? 'let (car form)) (symbol? (cadr form)))
            (loop (cons 'let (body form)) (cons (cadr form) bindings)))
           (else (loop (cdr form) bindings)))))
+
+(define (module-completions prefix)
+  (let* ((prefix (string-append "^" (regexp-quote prefix)))
+         (matcher (lambda (s) (string-match prefix s)))
+         (names (filter matcher (all-modules))))
+    (sort! names string<?)))
 
 ;;; completions.scm ends here
