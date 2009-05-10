@@ -31,6 +31,7 @@
             module-children
             module-location)
   #:use-module (geiser utils)
+  #:use-module (system vm program)
   #:use-module (ice-9 regex)
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
