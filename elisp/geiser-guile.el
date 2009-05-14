@@ -24,7 +24,6 @@
 
 ;;; Code:
 
-(require 'geiser-impl)
 (require 'geiser-syntax)
 (require 'geiser-custom)
 (require 'geiser-base)
@@ -124,11 +123,6 @@ If MODULE is provided, transform it to such a datum."
 (defun geiser-guile-guess ()
   "Return `t' if the current buffer looks like a Guile file."
   (listp (geiser-guile-get-module)))
-
-
-;;; Register this implementation:
-
-(geiser-impl--register 'guile)
 
 
 (provide 'geiser-guile)
