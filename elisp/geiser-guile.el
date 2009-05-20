@@ -85,9 +85,6 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Evaluation support:
 
 (defun geiser-guile-geiser-procedure (proc)
-  "Translate a bare procedure symbol to one executable in Guile's
-context. Return NULL for unsupported ones; at the very least,
-EVAL, COMPILE, LOAD-FILE and COMPILE-FILE should be supported."
   (let ((proc (intern (format "ge:%s"
                               (if (and geiser-guile-use-compiler-in-eval
                                        (eq proc 'eval))
@@ -99,8 +96,6 @@ EVAL, COMPILE, LOAD-FILE and COMPILE-FILE should be supported."
   "(define-module +\\(([^)]+)\\)")
 
 (defun geiser-guile-get-module (&optional module)
-  "Return a scheme datum representing the current module.
-If MODULE is provided, transform it to such a datum."
   (cond ((null module)
          (save-excursion
            (goto-char (point-min))
