@@ -43,6 +43,12 @@
   :type '(choice string (repeat string))
   :group 'geiser-guile)
 
+(defcustom geiser-guile-load-path nil
+  "A list of paths to be added to Guile's load path when it's
+started."
+  :type '(repeat file)
+  :group 'geiser-guile)
+
 (defcustom geiser-guile-init-file "~/.guile-geiser"
   "Initialization file with user code for the Guile REPL."
   :type 'string
@@ -68,6 +74,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (expand-file-name geiser-guile-init-file))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
     "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+    ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 (defconst geiser-guile-prompt-regexp "^[^() \n]+@([^)]*?)> ")
