@@ -28,7 +28,7 @@
   #:export (symbol-module
             module-filename
             all-modules
-            module-children
+            module-exports
             module-location)
   #:use-module (geiser utils)
   #:use-module (system vm program)
@@ -65,7 +65,7 @@
                roots
                roots))))
 
-(define (module-children mod-name)
+(define (module-exports mod-name)
   (let* ((elts (hash-fold classify-module-object
                           (list '() '() '())
                           (module-obarray (maybe-module-interface mod-name))))

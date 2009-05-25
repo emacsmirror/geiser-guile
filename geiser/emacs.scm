@@ -36,7 +36,7 @@
                ge:symbol-location
                ge:generic-methods
                ge:symbol-documentation
-               ge:module-children
+               ge:module-exports
                ge:module-location
                ge:callers
                ge:callees)
