@@ -110,7 +110,8 @@ This function uses `geiser-guile-init-file' if it exists."
                (geiser-guile-get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
-        ((stringp module) (or (ignore-errors (car (read-from-string module))) :f))
+        ((stringp module)
+         (or (ignore-errors (car (read-from-string module))) :f))
         (t :f)))
 
 (defun geiser-guile-symbol-begin (module)
