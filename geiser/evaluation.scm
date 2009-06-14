@@ -78,9 +78,10 @@
      (set-current-module module)
      (compile form))))
 
-(define ge:eval ge:compile)
 (define (ge:compile form module-name)
   (evaluate form module-name eval-compile))
+
+(define ge:eval ge:compile)
 
 (define (ge:compile-file path)
   "Compile a file, given its full @var{path}."
