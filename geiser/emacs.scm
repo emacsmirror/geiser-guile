@@ -39,7 +39,8 @@
                ge:module-exports
                ge:module-location
                ge:callers
-               ge:callees)
+               ge:callees
+               ge:find-file)
   #:use-module (geiser evaluation)
   #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))

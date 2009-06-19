@@ -28,7 +28,8 @@
   #:export (symbol-location
             generic-methods
             callers
-            callees)
+            callees
+            find-file)
   #:use-module (geiser utils)
   #:use-module (geiser modules)
   #:use-module (geiser doc)
@@ -89,5 +90,11 @@
   (let ((obj (symbol->object sym)))
     (and obj
          (map procedure-xref (procedure-callees obj)))))
+
+(define (find-file path)
+  (let loop ((dirs %load-path))
+    (if (null? dirs) #f
+        (let ((candidate (string-append (car dirs) "/" path)))
+          (if (file-exists? candidate) candidate (loop (cdr dirs)))))))
 
 ;;; xref.scm ends here
