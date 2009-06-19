@@ -121,6 +121,44 @@ This function uses `geiser-guile-init-file' if it exists."
     (save-excursion (skip-syntax-backward "^-()>") (point))))
 
 
+;;; Error display
+(defvar geiser-guile--file-cache (make-hash-table :test 'equal))
+
+(defun geiser-guile--resolve-file (file)
+  (when (and (stringp file) (not (string-equal file "unknown file")))
+    (if (file-name-absolute-p file) file
+      (or (gethash file geiser-guile--file-cache)
+          (puthash file
+                   (geiser-eval--send/result `(:eval ((:ge find-file) ,file)))
+                   geiser-guile--file-cache)))))
+
+(defconst geiser-guile--file-rx
+  "^In \\([^\n:]+\\):\n *\\([[:digit:]]+\\|\\?\\):")
+
+(defun geiser-guile--find-files ()
+  (save-excursion
+    (while (re-search-forward geiser-guile--file-rx nil t)
+      (let ((file (match-string 1))
+            (beg (match-beginning 1))
+            (end (match-end 1))
+            (line (string-to-number (or (match-string 2) "0"))))
+        (let ((file (geiser-guile--resolve-file file)))
+          (when file
+            (geiser-edit--make-link beg end file line 0)))))))
+
+(defun geiser-guile-display-error (module key msg)
+  (when key
+    (insert "Error: ")
+    (geiser--insert-with-face (format "%s" key) 'bold)
+    (newline 2))
+  (when msg
+    (let ((p (point)))
+      (insert msg)
+      (goto-char p)
+      (geiser-guile--find-files)))
+  t)
+
+
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
 
 (defun geiser-guile-guess ()
