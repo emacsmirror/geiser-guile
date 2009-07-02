@@ -47,39 +47,36 @@
     (else (display (format "ERROR: ~a, args: ~a" (car args) (cdr args)))))
   `(error (key . ,(car args))))
 
-(define (evaluate form module-name evaluator)
-  (let ((module (or (and (list? module-name)
-                         (resolve-module module-name))
-                    (current-module)))
-        (evaluator (lambda (f m)
-                     (call-with-values (lambda () (evaluator f m)) list)))
-        (result #f)
-        (captured-stack #f)
-        (error #f))
+(define (ge:compile form module-name)
+  (let* ((module (or (and (list? module-name)
+                          (resolve-module module-name))
+                     (current-module)))
+         (result #f)
+         (captured-stack #f)
+         (error #f)
+         (ev (lambda ()
+               (save-module-excursion
+                (set-current-module module)
+                (set! result (call-with-values
+                                 (lambda () (compile form))
+                               (lambda vs
+                                 (map (lambda (v)
+                                        (with-output-to-string
+                                          (lambda () (write v))))
+                                      vs))))))))
     (let ((output
            (with-output-to-string
              (lambda ()
-               (set! result
-                     (catch #t
-                       (lambda ()
-                         (start-stack 'geiser-eval (evaluator form module)))
-                       (lambda args
-                         (set! error #t)
-                         (apply handle-error captured-stack args))
-                       (lambda args
-                         (set! captured-stack (make-stack #t 2 15)))))))))
+               (catch #t
+                 (lambda () (start-stack 'geiser-eval (ev)))
+                 (lambda args
+                   (set! error #t)
+                   (apply handle-error captured-stack args))
+                 (lambda args
+                   (set! captured-stack (make-stack #t 2 15))))))))
       (write `(,(if error result (cons 'result result))
                (output . ,output)))
       (newline))))
-
-(define (eval-compile form module)
-  (save-module-excursion
-   (lambda ()
-     (set-current-module module)
-     (compile form))))
-
-(define (ge:compile form module-name)
-  (evaluate form module-name eval-compile))
 
 (define ge:eval ge:compile)
 
