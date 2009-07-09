@@ -56,14 +56,15 @@
          (error #f)
          (ev (lambda ()
                (save-module-excursion
-                (set-current-module module)
-                (set! result (call-with-values
-                                 (lambda () (compile form))
-                               (lambda vs
-                                 (map (lambda (v)
-                                        (with-output-to-string
-                                          (lambda () (write v))))
-                                      vs))))))))
+                (lambda ()
+                  (set-current-module module)
+                  (set! result (call-with-values
+                                   (lambda () (compile form))
+                                 (lambda vs
+                                   (map (lambda (v)
+                                          (with-output-to-string
+                                            (lambda () (write v))))
+                                        vs)))))))))
     (let ((output
            (with-output-to-string
              (lambda ()
