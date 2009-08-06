@@ -76,9 +76,9 @@
         (key (arglst args 'keyword))
         (rest (assq-ref args 'rest)))
     (let ((sgn `(,fun ,@req
-                      ,@(if (not (null? opt)) (cons #:opt opt) '())
-                      ,@(if (not (null? key)) (cons #:key key) '()))))
-      (if rest `(,@sgn #:rest ,rest) sgn))))
+                      ,@(if (not (null? opt)) (cons 'geiser-opt_marker opt) '())
+                      ,@(if (not (null? key)) (cons 'geiser-key_maker key) '()))))
+      (if rest `(,@sgn 'geiser-rest_marker ,rest) sgn))))
 
 (define (find-position args form)
   (let* ((lf (length form))
