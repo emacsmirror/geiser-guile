@@ -37,8 +37,6 @@
   #:use-module (oop goops)
   #:use-module (srfi srfi-1))
 
-(define *an-object* #t)
-
 (define (autodoc ids)
   (if (not (list? ids))
       '()
