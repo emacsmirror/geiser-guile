@@ -37,6 +37,8 @@
   #:use-module (oop goops)
   #:use-module (srfi srfi-1))
 
+(define *an-object* #t)
+
 (define (autodoc ids)
   (if (not (list? ids))
       '()
@@ -59,17 +61,19 @@
             ((list? args) args)
             (else (list args)))))
   `(,id
-    (required ,@(arglst 'required))
-    (optional ,@(arglst 'optional)
-              ,@(let ((rest (assq-ref args 'rest)))
-                  (if rest (list "...") '())))
-    (key ,@(arglst 'keyword))))
+    (args ,@(if (list? args)
+                `((required ,@(arglst 'required))
+                  (optional ,@(arglst 'optional)
+                            ,@(let ((rest (assq-ref args 'rest)))
+                                (if rest (list "...") '())))
+                  (key ,@(arglst 'keyword)))
+                '()))))
 
 (define (obj-args obj)
   (cond ((not obj) #f)
         ((or (procedure? obj) (program? obj)) (arguments obj))
         ((macro? obj) (or (obj-args (macro-transformer obj)) '((required ...))))
-        (else #f)))
+        (else 'variable)))
 
 (define (arguments proc)
   (cond
