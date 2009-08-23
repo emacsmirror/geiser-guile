@@ -27,6 +27,9 @@
 (require 'geiser-syntax)
 (require 'geiser-custom)
 (require 'geiser-base)
+(require 'geiser-eval)
+(require 'geiser-edit)
+(require 'geiser)
 
 
 ;;; Customization:
