@@ -25,7 +25,7 @@
   "Customization for Geiser's Guile flavour."
   :group 'geiser)
 
-(defcustom geiser-guile-binary
+(geiser-custom--defcustom geiser-guile-binary
   (cond ((eq system-type 'windows-nt) "guile.exe")
         ((eq system-type 'darwin) "guile")
         (t "guile"))
@@ -33,18 +33,18 @@
   :type '(choice string (repeat string))
   :group 'geiser-guile)
 
-(defcustom geiser-guile-load-path nil
+(geiser-custom--defcustom geiser-guile-load-path nil
   "A list of paths to be added to Guile's load path when it's
 started."
   :type '(repeat file)
   :group 'geiser-guile)
 
-(defcustom geiser-guile-init-file "~/.guile-geiser"
+(geiser-custom--defcustom geiser-guile-init-file "~/.guile-geiser"
   "Initialization file with user code for the Guile REPL."
   :type 'string
   :group 'geiser-guile)
 
-(defcustom geiser-guile-use-compiler-in-eval t
+(geiser-custom--defcustom geiser-guile-use-compiler-in-eval t
   "When enable, always use Guile's compiler to perform evaluation.
 Recommended, since the compiler usually collects better metadata
 than the interpreter."
