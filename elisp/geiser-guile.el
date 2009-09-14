@@ -95,8 +95,11 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile-get-module (&optional module)
   (cond ((null module)
          (save-excursion
-           (goto-char (point-min))
-           (if (re-search-forward geiser-guile--module-re nil t)
+           (ignore-errors
+             (backward-sexp)
+             (while (not (zerop (geiser-syntax--nesting-level)))
+               (backward-up-list)))
+           (if (re-search-backward geiser-guile--module-re nil t)
                (geiser-guile-get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
@@ -152,9 +155,9 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
 
 (defun geiser-guile-guess ()
-  "Return `t' if the current buffer looks like a Guile file."
-  (listp (geiser-guile-get-module)))
-
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward geiser-guile--module-re nil t)))
 
 (provide 'geiser-guile)
 ;;; geiser-guile.el ends here
