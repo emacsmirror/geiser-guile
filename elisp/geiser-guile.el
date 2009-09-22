@@ -69,15 +69,6 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile-prompt-regexp "^[^() \n]+@([^)]*?)> ")
 
-(defun switch-to-guile (&optional ask)
-  (interactive "P")
-  (switch-to-geiser ask 'guile))
-
-(defun run-guile ()
-  "Run Geiser using Guile."
-  (interactive)
-  (run-geiser 'guile))
-
 
 ;;; Evaluation support:
 
@@ -158,6 +149,22 @@ This function uses `geiser-guile-init-file' if it exists."
   (save-excursion
     (goto-char (point-min))
     (re-search-forward geiser-guile--module-re nil t)))
+
+
+;;; Implementation definition:
+
+(define-geiser-implementation guile
+  (binary geiser-guile-binary)
+  (arglist geiser-guile-parameters)
+  (startup)
+  (prompt-regexp geiser-guile-prompt-regexp)
+  (marshall-procedure geiser-guile-geiser-procedure)
+  (find-module geiser-guile-get-module)
+  (find-symbol-begin geiser-guile-symbol-begin)
+  (display-error geiser-guile-display-error)
+  (display-help)
+  (check-buffer geiser-guile-guess))
+
 
 (provide 'geiser-guile)
 ;;; geiser-guile.el ends here
