@@ -38,29 +38,21 @@
                      (current-module)))
          (result #f)
          (captured-stack #f)
-         (error #f)
+         (err #f)
          (ev (lambda ()
-               (save-module-excursion
-                (lambda ()
-                  (set-current-module module)
-                  (set! result (call-with-values
-                                   (lambda () (compile form))
-                                 (lambda vs
-                                   (map (lambda (v)
-                                          (with-output-to-string
-                                            (lambda () (write v))))
-                                        vs)))))))))
+               (set! result (call-with-values
+                                (lambda () (compile form #:env module))
+                              (lambda vs (map object->string vs)))))))
     (let ((output
            (with-output-to-string
              (lambda ()
                (catch #t
                  (lambda () (start-stack 'geiser-eval (ev)))
                  (lambda args
-                   (set! error #t)
-                   (apply handle-error captured-stack args))
+                   (set! err (apply handle-error captured-stack args)))
                  (lambda args
-                   (set! captured-stack (make-stack #t 2 15))))))))
-      (write `(,(if error result (cons 'result result))
+                   (set! captured-stack (make-stack #t 2 7))))))))
+      (write `(,(or err (cons 'result result))
                (output . ,output)))
       (newline))))
 
