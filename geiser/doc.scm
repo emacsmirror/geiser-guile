@@ -45,11 +45,11 @@
             (else (list args)))))
   `(,id
     (args ,@(if (list? args)
-                `((required ,@(arglst 'required))
-                  (optional ,@(arglst 'optional)
-                            ,@(let ((rest (assq-ref args 'rest)))
-                                (if rest (list "...") '())))
-                  (key ,@(arglst 'keyword)))
+                `(((required ,@(arglst 'required))
+                   (optional ,@(arglst 'optional)
+                             ,@(let ((rest (assq-ref args 'rest)))
+                                 (if rest (list "...") '())))
+                   (key ,@(arglst 'keyword))))
                 '()))))
 
 (define (obj-args obj)
