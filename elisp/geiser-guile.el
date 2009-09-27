@@ -44,20 +44,13 @@ started."
   :type 'string
   :group 'geiser-guile)
 
-(geiser-custom--defcustom geiser-guile-use-compiler-in-eval t
-  "When enable, always use Guile's compiler to perform evaluation.
-Recommended, since the compiler usually collects better metadata
-than the interpreter."
-  :type 'boolean
-  :group 'geiser-guile)
-
 
 ;;; REPL support:
 
-(defun geiser-guile-binary ()
+(defun geiser-guile--binary ()
   (if (listp geiser-guile-binary) (car geiser-guile-binary) geiser-guile-binary))
 
-(defun geiser-guile-parameters ()
+(defun geiser-guile--parameters ()
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
@@ -67,23 +60,19 @@ This function uses `geiser-guile-init-file' if it exists."
     ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
-(defconst geiser-guile-prompt-regexp "^[^() \n]+@([^)]*?)> ")
+(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
 
 
 ;;; Evaluation support:
 
-(defun geiser-guile-geiser-procedure (proc)
-  (let ((proc (intern (format "ge:%s"
-                              (if (and geiser-guile-use-compiler-in-eval
-                                       (eq proc 'eval))
-                                  'compile
-                                proc)))))
+(defun geiser-guile--geiser-procedure (proc)
+  (let ((proc (intern (format "ge:%s" (if (eq proc 'eval) 'compile proc)))))
     `(@ (geiser emacs) ,proc)))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
 
-(defun geiser-guile-get-module (&optional module)
+(defun geiser-guile--get-module (&optional module)
   (cond ((null module)
          (save-excursion
            (ignore-errors
@@ -91,14 +80,14 @@ This function uses `geiser-guile-init-file' if it exists."
              (while (not (zerop (geiser-syntax--nesting-level)))
                (backward-up-list)))
            (if (re-search-backward geiser-guile--module-re nil t)
-               (geiser-guile-get-module (match-string-no-properties 1))
+               (geiser-guile--get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
         ((stringp module)
          (or (ignore-errors (car (read-from-string module))) :f))
         (t :f)))
 
-(defun geiser-guile-symbol-begin (module)
+(defun geiser-guile--symbol-begin (module)
   (if module
       (max (save-excursion (beginning-of-line) (point))
            (save-excursion (skip-syntax-backward "^(>") (1- (point))))
@@ -130,7 +119,7 @@ This function uses `geiser-guile-init-file' if it exists."
           (when file
             (geiser-edit--make-link beg end file line 0)))))))
 
-(defun geiser-guile-display-error (module key msg)
+(defun geiser-guile--display-error (module key msg)
   (when key
     (insert "Error: ")
     (geiser--insert-with-face (format "%s" key) 'bold)
@@ -145,7 +134,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
 
-(defun geiser-guile-guess ()
+(defun geiser-guile--guess ()
   (save-excursion
     (goto-char (point-min))
     (re-search-forward geiser-guile--module-re nil t)))
@@ -154,16 +143,16 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Implementation definition:
 
 (define-geiser-implementation guile
-  (binary geiser-guile-binary)
-  (arglist geiser-guile-parameters)
+  (binary geiser-guile--binary)
+  (arglist geiser-guile--parameters)
   (startup)
-  (prompt-regexp geiser-guile-prompt-regexp)
-  (marshall-procedure geiser-guile-geiser-procedure)
-  (find-module geiser-guile-get-module)
-  (find-symbol-begin geiser-guile-symbol-begin)
-  (display-error geiser-guile-display-error)
+  (prompt-regexp geiser-guile--prompt-regexp)
+  (marshall-procedure geiser-guile--geiser-procedure)
+  (find-module geiser-guile--get-module)
+  (find-symbol-begin geiser-guile--symbol-begin)
+  (display-error geiser-guile--display-error)
   (display-help)
-  (check-buffer geiser-guile-guess))
+  (check-buffer geiser-guile--guess))
 
 
 (provide 'geiser-guile)
