@@ -55,7 +55,7 @@
 (define (obj-args obj)
   (cond ((not obj) #f)
         ((or (procedure? obj) (program? obj)) (arguments obj))
-        ((macro? obj) (or (obj-args (macro-transformer obj)) '((required ...))))
+        ((macro? obj) '((required ...)))
         (else 'variable)))
 
 (define (arguments proc)
@@ -79,8 +79,12 @@
   (let ((req (car art))
         (opt (cadr art))
         (rest (caddr art)))
-    `(,@(if (> req 0) (list (cons 'required (gen-arg-names 1 req))) '())
-      ,@(if (> opt 0) (list (cons 'optional (gen-arg-names (+ 1 req) opt))) '())
+    `(,@(if (> req 0)
+            (list (cons 'required (gen-arg-names 1 req)))
+            '())
+      ,@(if (> opt 0)
+            (list (cons 'optional (gen-arg-names (+ 1 req) opt)))
+            '())
       ,@(if rest (list (cons 'rest 'rest)) '()))))
 
 (define (gen-arg-names fst count)
