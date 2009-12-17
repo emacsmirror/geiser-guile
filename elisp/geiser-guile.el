@@ -109,15 +109,16 @@ This function uses `geiser-guile-init-file' if it exists."
   "^In \\([^\n:]+\\):\n *\\([[:digit:]]+\\|\\?\\):")
 
 (defun geiser-guile--find-files ()
-  (save-excursion
-    (while (re-search-forward geiser-guile--file-rx nil t)
-      (let ((file (match-string 1))
-            (beg (match-beginning 1))
-            (end (match-end 1))
-            (line (string-to-number (or (match-string 2) "0"))))
-        (let ((file (geiser-guile--resolve-file file)))
-          (when file
-            (geiser-edit--make-link beg end file line 0)))))))
+  (with--geiser-implementation 'guile
+    (save-excursion
+      (while (re-search-forward geiser-guile--file-rx nil t)
+        (let ((file (match-string 1))
+              (beg (match-beginning 1))
+              (end (match-end 1))
+              (line (string-to-number (or (match-string 2) "0"))))
+          (let ((file (geiser-guile--resolve-file file)))
+            (when file
+              (geiser-edit--make-link beg end file line 0))))))))
 
 (defun geiser-guile--display-error (module key msg)
   (when key
