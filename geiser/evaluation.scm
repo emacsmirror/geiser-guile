@@ -60,11 +60,9 @@
 
 (define (ge:compile-file path)
   "Compile a file, given its full @var{path}."
-  (ge:compile `(compile-and-load ,path) '(geiser evaluation)))
+  (ge:compile `(load-compiled (compile-file ,path)) '(geiser evaluation)))
 
-(define (ge:load-file path)
-  "Load file, given its full @var{path}."
-  (ge:compile `(load-compiled ,(compiled-file-name path)) '(geiser evaluation)))
+(define ge:load-file ge:compile-file)
 
 (define (ge:macroexpand form . all)
   (let ((all (and (not (null? all)) (car all))))
