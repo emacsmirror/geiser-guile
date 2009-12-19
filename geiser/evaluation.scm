@@ -51,7 +51,7 @@
                  (lambda args
                    (set! err (apply handle-error captured-stack args)))
                  (lambda args
-                   (set! captured-stack (make-stack #t 2 7))))))))
+                   (set! captured-stack (make-stack #t 11 11))))))))
       (write `(,(or err (cons 'result result))
                (output . ,output)))
       (newline))))
