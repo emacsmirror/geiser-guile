@@ -1,6 +1,6 @@
 ;;; doc.scm -- procedures providing documentation on scheme objects
 
-;; Copyright (C) 2009 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -60,15 +60,15 @@
 
 (define (arguments proc)
   (define (p-arguments prog)
-    (map (lambda (a) ((@@ (system vm program) arity->arguments) prog a))
+    (map (lambda (a) ((@@ (system vm program) arity->arguments-alist) prog a))
          (or (program-arities prog) '())))
   (define (clist f) (lambda (x) (let ((y (f x))) (and y (list y)))))
   (cond ((is-a? proc <generic>) (generic-args proc))
         ((procedure-property proc 'arglist) => (clist arglist->args))
         ((procedure-source proc) => (clist source->args))
+        ((doc->args proc) => list)
         ((program? proc) (let ((a (p-arguments proc)))
                            (and (not (null? a)) a)))
-        ((doc->args proc) => list)
         ((procedure-property proc 'arity) => (clist arity->args))
         (else #f)))
 
