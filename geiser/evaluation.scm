@@ -1,6 +1,6 @@
 ;;; evaluation.scm -- evaluation, compilation and macro-expansion
 
-;; Copyright (C) 2009 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -31,10 +31,17 @@
      (display-error stack (current-output-port) subr msg args rest))
     (else (display (format "ERROR: ~a, args: ~a" (car args) (cdr args)))))
   `(error (key . ,(car args))))
+(nested-ref the-root-module '(%app modules geiser))
+
+(define (find-module module-name)
+  (and (list? module-name)
+       (or (nested-ref the-root-module (append '(%app modules) module-name))
+           (let ((m (resolve-module module-name)))
+             (beautify-user-module! m)
+             m))))
 
 (define (ge:compile form module-name)
-  (let* ((module (or (and (list? module-name)
-                          (resolve-module module-name))
+  (let* ((module (or (find-module module-name)
                      (current-module)))
          (result #f)
          (captured-stack #f)
