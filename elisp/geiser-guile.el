@@ -48,7 +48,9 @@ started."
 ;;; REPL support:
 
 (defun geiser-guile--binary ()
-  (if (listp geiser-guile-binary) (car geiser-guile-binary) geiser-guile-binary))
+  (if (listp geiser-guile-binary)
+      (car geiser-guile-binary)
+    geiser-guile-binary))
 
 (defun geiser-guile--parameters ()
   "Return a list with all parameters needed to start Guile.
@@ -63,9 +65,31 @@ This function uses `geiser-guile-init-file' if it exists."
 (defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
 
 
+;;; Catching the debugger
+(make-variable-buffer-local
+ (defvar geiser-guile--is-debugging nil))
+
+(defun geiser-guile--is-debugging ()
+  (with-current-buffer (geiser-repl--get-repl geiser-impl--implementation)
+    geiser-guile--is-debugging))
+
+(defvar geiser-guile--debugger-prompt-regexp "[0-9]+ debug> *$")
+(defun geiser-guile--watch-debugger (str)
+  (setq geiser-guile--is-debugging
+        (string-match-p geiser-guile--debugger-prompt-regexp str)))
+
+(defun geiser-guile--startup ()
+  (add-hook 'comint-output-filter-functions
+            'geiser-guile--watch-debugger
+            nil
+            t))
+
+
 ;;; Evaluation support:
 
 (defun geiser-guile--geiser-procedure (proc)
+  (when (geiser-guile--is-debugging)
+    (error "(Guile REPL is in debug mode)"))
   (let ((proc (intern (format "ge:%s" (if (eq proc 'eval) 'compile proc)))))
     `(@ (geiser emacs) ,proc)))
 
@@ -145,7 +169,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (define-geiser-implementation guile
   (binary geiser-guile--binary)
   (arglist geiser-guile--parameters)
-  (startup)
+  (startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
