@@ -63,33 +63,12 @@ This function uses `geiser-guile-init-file' if it exists."
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 (defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
-
-
-;;; Catching the debugger
-(make-variable-buffer-local
- (defvar geiser-guile--is-debugging nil))
-
-(defun geiser-guile--is-debugging ()
-  (with-current-buffer (geiser-repl--get-repl geiser-impl--implementation)
-    geiser-guile--is-debugging))
-
-(defvar geiser-guile--debugger-prompt-regexp "[0-9]+ debug> *$")
-(defun geiser-guile--watch-debugger (str)
-  (setq geiser-guile--is-debugging
-        (string-match-p geiser-guile--debugger-prompt-regexp str)))
-
-(defun geiser-guile--startup ()
-  (add-hook 'comint-output-filter-functions
-            'geiser-guile--watch-debugger
-            nil
-            t))
+(defconst geiser-guile--debugger-prompt-regexp "[0-9]+ debug> *")
 
 
 ;;; Evaluation support:
 
 (defun geiser-guile--geiser-procedure (proc)
-  (when (geiser-guile--is-debugging)
-    (error "(Guile REPL is in debug mode)"))
   (let ((proc (intern (format "ge:%s" (if (eq proc 'eval) 'compile proc)))))
     `(@ (geiser emacs) ,proc)))
 
@@ -164,6 +143,14 @@ This function uses `geiser-guile-init-file' if it exists."
     (re-search-forward geiser-guile--module-re nil t)))
 
 
+;;; Compilation shell regexps
+(defun geiser-guile--startup ()
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       '(("^In \\([^:]+\\):" 1)
+         ("^  \\([0-9]+\\):  " nil 1)))
+  (compilation-setup t))
+
+
 ;;; Implementation definition:
 
 (define-geiser-implementation guile
@@ -171,6 +158,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (arglist geiser-guile--parameters)
   (startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
+  (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
   (find-symbol-begin geiser-guile--symbol-begin)
