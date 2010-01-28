@@ -41,26 +41,15 @@
              m))))
 
 (define (ge:compile form module-name)
-  (let* ((module (or (find-module module-name)
-                     (current-module)))
+  (let* ((module (or (find-module module-name) (current-module)))
          (result #f)
-         (captured-stack #f)
-         (err #f)
          (ev (lambda ()
                (set! result (call-with-values
                                 (lambda () (compile form #:env module))
                               (lambda vs (map object->string vs)))))))
-    (let ((output
-           (with-output-to-string
-             (lambda ()
-               (catch #t
-                 (lambda () (start-stack 'geiser-eval (ev)))
-                 (lambda args
-                   (set! err (apply handle-error captured-stack args)))
-                 (lambda args
-                   (set! captured-stack (make-stack #t 11 11))))))))
-      (write `(,(or err (cons 'result result))
-               (output . ,output)))
+    (let (#;(output (with-output-to-string ev)))
+      (ev)
+      (write `(,(cons 'result result) (output . "")))
       (newline))))
 
 (define ge:eval ge:compile)
