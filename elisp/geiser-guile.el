@@ -90,7 +90,7 @@ This function uses `geiser-guile-init-file' if it exists."
         (t :f)))
 
 (defun geiser-guile--enter-command (module)
-  (and module (format ",m %s\n" (geiser-guile--get-module module))))
+  (and module (format ",m %s" (geiser-guile--get-module module))))
 
 (defun geiser-guile--symbol-begin (module)
   (if module
@@ -157,7 +157,6 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Implementation definition:
 
 (define-geiser-implementation guile
-  (unsupported-procedures '(enter-command))
   (binary geiser-guile--binary)
   (arglist geiser-guile--parameters)
   (startup geiser-guile--startup)
@@ -165,7 +164,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
-  ;; (enter-command geiser-guile--enter-command)
+  (enter-command geiser-guile--enter-command)
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
   (display-help)
