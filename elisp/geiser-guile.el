@@ -152,8 +152,8 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Compilation shell regexps
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
-       '(("^In \\([^:]+\\):" 1)
-         ("^  \\([0-9]+\\):  " nil 1)))
+       '(("^In \\(/[^:\n]+\\):\n +\\([0-9]+\\): +" 1 2)
+         ("at \\(/[^:\n]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)" 1 2 3)))
   (compilation-setup t))
 
 
