@@ -107,7 +107,8 @@ This function uses `geiser-guile-init-file' if it exists."
     (if (file-name-absolute-p file) file
       (or (gethash file geiser-guile--file-cache)
           (puthash file
-                   (geiser-eval--send/result `(:eval ((:ge find-file) ,file)))
+                   (geiser-eval--send/result
+                    `(:eval ((:ge find-file) ,file)))
                    geiser-guile--file-cache)))))
 
 (defconst geiser-guile--file-rx
@@ -126,16 +127,18 @@ This function uses `geiser-guile-init-file' if it exists."
               (geiser-edit--make-link beg end file line 0))))))))
 
 (defun geiser-guile--display-error (module key msg)
-  (when key
-    (insert "Error: ")
-    (geiser--insert-with-face (format "%s" key) 'bold)
-    (newline 2))
-  (when msg
-    (let ((p (point)))
-      (insert msg)
-      (goto-char p)
-      (geiser-guile--find-files)))
-  t)
+  (if (eq key 'geiser-debugger)
+      (comint-send-string nil "bt\n")
+    (when key
+      (insert "Error: ")
+      (geiser--insert-with-face (format "%s" key) 'bold)
+      (newline 2))
+    (when msg
+      (let ((p (point)))
+        (insert msg)
+        (goto-char p)
+        (geiser-guile--find-files)))
+    t))
 
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
