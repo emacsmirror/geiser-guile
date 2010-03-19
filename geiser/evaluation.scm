@@ -43,6 +43,7 @@
 (define (ge:compile form module-name)
   (let* ((module (or (find-module module-name) (current-module)))
          (result #f)
+         (form `(start-stack 'geiser-evaluation-stack ,form))
          (ev (lambda ()
                (set! result (call-with-values
                                 (lambda () (compile form #:env module))
