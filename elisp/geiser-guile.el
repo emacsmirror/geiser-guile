@@ -86,7 +86,8 @@ This function uses `geiser-guile-init-file' if it exists."
              :f)))
         ((listp module) module)
         ((stringp module)
-         (or (ignore-errors (car (read-from-string module))) :f))
+         (or (ignore-errors
+               (car (geiser-syntax--read-from-string module))) :f))
         (t :f)))
 
 (defun geiser-guile--enter-command (module)
