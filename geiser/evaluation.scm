@@ -31,7 +31,6 @@
      (display-error stack (current-output-port) subr msg args rest))
     (else (display (format "ERROR: ~a, args: ~a" (car args) (cdr args)))))
   `(error (key . ,(car args))))
-(nested-ref the-root-module '(%app modules geiser))
 
 (define (find-module module-name)
   (and (list? module-name)
@@ -48,9 +47,8 @@
                (set! result (call-with-values
                                 (lambda () (compile form #:env module))
                               (lambda vs (map object->string vs)))))))
-    (let (#;(output (with-output-to-string ev)))
-      (ev)
-      (write `(,(cons 'result result) (output . "")))
+    (let ((output (with-output-to-string ev)))
+      (write `(,(cons 'result result) (output . ,output)))
       (newline))))
 
 (define ge:eval ge:compile)
