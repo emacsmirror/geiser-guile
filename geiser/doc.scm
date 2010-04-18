@@ -177,7 +177,7 @@
                          ((program? obj) "A compiled program")
                          (else "An object")))
              (modname (symbol-module sym))
-            (doc (object-documentation obj)))
+             (doc (object-documentation obj)))
         (display type)
         (if modname
             (begin
