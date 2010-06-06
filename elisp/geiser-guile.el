@@ -172,7 +172,6 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((f (match-string-no-properties 1)))
     (if (file-name-absolute-p f)
         (list f)
-      (message "looking for %s" f)
       (let ((f (geiser-guile--find-in-load-path f geiser-guile--load-path)))
         (and f (list f))))))
 
