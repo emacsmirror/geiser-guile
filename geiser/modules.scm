@@ -11,7 +11,9 @@
 
 (define-module (geiser modules)
   #:export (symbol-module
-            module-filename
+            module-name?
+            module-path
+            find-module
             all-modules
             module-exports
             module-location)
@@ -20,6 +22,11 @@
   #:use-module (ice-9 regex)
   #:use-module (ice-9 session)
   #:use-module (srfi srfi-1))
+
+(define (module-name? module-name)
+  (and (list? module-name)
+       (> (length module-name) 0)
+       (every symbol? module-name)))
 
 (define (symbol-module sym . all)
   (and sym
@@ -38,9 +45,19 @@
            (and (eq? key 'module-name) (car args))))))
 
 (define (module-location name)
-  (make-location (module-filename name) #f))
+  (make-location (module-path name) #f))
 
-(define module-filename (@@ (ice-9 session) module-filename))
+(define (find-module module-name)
+  (and (module-name? module-name)
+       (or (nested-ref (resolve-module '() #f) module-name)
+           (let ((m (resolve-module module-name)))
+             (beautify-user-module! m)
+             m))))
+
+(define (module-path module-name)
+  (and (module-name? module-name)
+       (or ((@@ (ice-9 session) module-filename) module-name)
+           (module-filename (resolve-module module-name)))))
 
 (define (all-modules)
   (let ((roots ((@@ (ice-9 session) root-modules))))

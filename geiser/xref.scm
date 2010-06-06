@@ -55,7 +55,7 @@
 (define (program-path p)
   (let* ((mod (program-module p))
          (name (and mod (module-name mod))))
-    (and name (module-filename name))))
+    (and name (module-path name))))
 
 (define (procedure-xref proc . mod-name)
   (let ((proc-name (or (procedure-name proc) '<anonymous>))

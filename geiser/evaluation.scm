@@ -15,6 +15,7 @@
             ge:macroexpand
             ge:compile-file
             ge:load-file)
+  #:use-module (geiser modules)
   #:use-module (srfi srfi-1)
   #:use-module (language tree-il)
   #:use-module (system base compile)
@@ -32,13 +33,6 @@
      (display-error stack (current-output-port) subr msg args rest))
     (else (display (format "ERROR: ~a, args: ~a" (car args) (cdr args)))))
   `(error (key . ,(car args))))
-
-(define (find-module module-name)
-  (and (list? module-name)
-       (or (nested-ref the-root-module (append '(%app modules) module-name))
-           (let ((m (resolve-module module-name)))
-             (beautify-user-module! m)
-             m))))
 
 (define (write-result result output)
   (write (list (cons 'result result) (cons 'output output)))
