@@ -56,8 +56,9 @@
 (define ge:eval ge:compile)
 
 (define (ge:compile-file path)
-  "Compile a file, given its full @var{path}."
-  (ge:compile `(load-compiled (compile-file ,path)) '(geiser evaluation)))
+  (ge:compile `(load-compiled (compile-file ,path
+                                            #:canonicalization 'absolute))
+              '(geiser evaluation)))
 
 (define ge:load-file ge:compile-file)
 
