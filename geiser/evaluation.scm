@@ -45,9 +45,8 @@
          (ev (lambda ()
                (set! result (call-with-values
                                 (lambda ()
-                                  (compile (start-stack
-                                            'geiser-evaluation-stack form)
-                                           #:env module))
+                                  (start-stack 'geiser-evaluation-stack
+                                               (compile form #:env module)))
                               (lambda vs (map object->string vs)))))))
     (let ((output (with-output-to-string ev)))
       (write `(,(cons 'result result) (output . ,output)))
