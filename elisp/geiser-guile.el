@@ -152,10 +152,9 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Compilation shell regexps
 
-(defconst geiser-guile--path-rx "^In \\([^:\n]+\\):\n")
+(defconst geiser-guile--path-rx "^In \\([^:\n ]+\\):\n")
 
-(defconst geiser-guile--rel-path-rx
-  "^In \\([^/\n]+.+?/module/\\([^:\n]+\\)\\):\n")
+(defconst geiser-guile--rel-path-rx "^In +\\([^/\n :]+\\):\n")
 
 (make-variable-buffer-local
  (defvar geiser-guile--load-path nil))
@@ -173,22 +172,20 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((f (match-string-no-properties 1)))
     (if (file-name-absolute-p f)
         (list f)
-      (let ((p (match-string-no-properties 0)))
-        (when (string-match geiser-guile--rel-path-rx p)
-          (let ((f (geiser-guile--find-in-load-path
-                    (match-string-no-properties 2 p)
-                    geiser-guile--load-path)))
-            (and f (list f))))))))
+      (message "looking for %s" f)
+      (let ((f (geiser-guile--find-in-load-path f geiser-guile--load-path)))
+        (and f (list f))))))
 
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
-         ("^ +\\([0-9]+\\): +" nil 1)
+         ("^ *\\([0-9]+\\): +" nil 1)
          ("at \\(/[^:\n]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)" 1 2 3)))
   (setq geiser-guile--load-path (geiser-guile--load-path))
   (compilation-setup t)
-  (font-lock-add-keywords
-   nil `((,geiser-guile--path-rx 1 compilation-error-face))))
+  (font-lock-add-keywords nil
+                          `((,geiser-guile--path-rx 1
+                                                    compilation-error-face))))
 
 
 ;;; Implementation definition:
