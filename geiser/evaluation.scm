@@ -19,6 +19,7 @@
   #:use-module (system base compile)
   #:use-module (system base pmatch)
   #:use-module (system vm program)
+  #:use-module (language tree-il)
   #:use-module (ice-9 pretty-print))
 
 (define (handle-error stack . args)
@@ -64,6 +65,6 @@
   (let ((all (and (not (null? all)) (car all))))
     (with-output-to-string
       (lambda ()
-        (pretty-print ((if all macroexpand macroexpand-1) form))))))
+        (pretty-print (tree-il->scheme (macroexpand form)))))))
 
 ;;; evaluation.scm ends here
