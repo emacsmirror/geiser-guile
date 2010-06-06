@@ -16,10 +16,10 @@
             ge:compile-file
             ge:load-file)
   #:use-module (srfi srfi-1)
+  #:use-module (language tree-il)
   #:use-module (system base compile)
   #:use-module (system base pmatch)
   #:use-module (system vm program)
-  #:use-module (language tree-il)
   #:use-module (ice-9 pretty-print))
 
 (define (handle-error stack . args)
@@ -40,25 +40,35 @@
              (beautify-user-module! m)
              m))))
 
+(define (write-result result output)
+  (write (list (cons 'result result) (cons 'output output)))
+  (newline))
+
 (define (ge:compile form module-name)
   (let* ((module (or (find-module module-name) (current-module)))
          (result #f)
          (ev (lambda ()
-               (set! result (call-with-values
-                                (lambda ()
-                                  (start-stack 'geiser-evaluation-stack
-                                               (compile form #:env module)))
-                              (lambda vs (map object->string vs)))))))
+               (set! result
+                     (call-with-values
+                         (lambda ()
+                           (let* ((o (compile form
+                                              #:to 'objcode #:env module))
+                                  (thunk (make-program o)))
+                             (start-stack 'geiser-evaluation-stack
+                                          (eval `(,thunk) module))))
+                       (lambda vs (map object->string vs)))))))
     (let ((output (with-output-to-string ev)))
-      (write `(,(cons 'result result) (output . ,output)))
-      (newline))))
+      (write-result result output))))
 
 (define ge:eval ge:compile)
 
 (define (ge:compile-file path)
-  (ge:compile `(load-compiled (compile-file ,path
-                                            #:canonicalization 'absolute))
-              '(geiser evaluation)))
+  (write-result
+   (let ((cr (compile-file path #:canonicalization 'absolute)))
+     (and cr
+          (list (object->string (save-module-excursion
+                                 (lambda () (load-compiled cr)))))))
+   ""))
 
 (define ge:load-file ge:compile-file)
 
