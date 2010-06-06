@@ -1,6 +1,6 @@
 ;;; modules.scm -- module metadata
 
-;; Copyright (C) 2009 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -27,7 +27,8 @@
          (lambda ()
            (apropos-fold (lambda (module name var init)
                            (if (eq? name sym)
-                               (throw 'module-name (module-name module)) init))
+                               (throw 'module-name (module-name module))
+                               init))
                          #f
                          (regexp-quote (symbol->string sym))
                          (if (or (null? all) (not (car all)))

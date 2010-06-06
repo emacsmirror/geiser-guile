@@ -42,10 +42,12 @@
 (define (ge:compile form module-name)
   (let* ((module (or (find-module module-name) (current-module)))
          (result #f)
-         (form `(start-stack 'geiser-evaluation-stack ,form))
          (ev (lambda ()
                (set! result (call-with-values
-                                (lambda () (compile form #:env module))
+                                (lambda ()
+                                  (compile (start-stack
+                                            'geiser-evaluation-stack form)
+                                           #:env module))
                               (lambda vs (map object->string vs)))))))
     (let ((output (with-output-to-string ev)))
       (write `(,(cons 'result result) (output . ,output)))
