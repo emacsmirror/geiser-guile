@@ -130,7 +130,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (if (eq key 'geiser-debugger)
       (progn
         (comint-send-string nil "0\n")
-        (accept-process-output nil 0.1)
+        (accept-process-output nil 0.01)
         (when msg
           (goto-char (point-max))
           (comint-previous-prompt 1)
