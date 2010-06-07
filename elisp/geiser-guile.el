@@ -128,7 +128,14 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--display-error (module key msg)
   (if (eq key 'geiser-debugger)
-      (comint-send-string nil "bt\n")
+      (progn
+        (comint-send-string nil "0\n")
+        (accept-process-output nil 0.1)
+        (when msg
+          (goto-char (point-max))
+          (comint-previous-prompt 1)
+          (insert "\n" msg)
+          (goto-char (point-max))))
     (when key
       (insert "Error: ")
       (geiser--insert-with-face (format "%s" key) 'bold)
@@ -137,8 +144,8 @@ This function uses `geiser-guile-init-file' if it exists."
       (let ((p (point)))
         (insert msg)
         (goto-char p)
-        (geiser-guile--find-files)))
-    t))
+        (geiser-guile--find-files))))
+  t)
 
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
