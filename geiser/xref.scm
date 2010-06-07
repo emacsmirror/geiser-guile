@@ -60,7 +60,7 @@
 (define (procedure-xref proc . mod-name)
   (let ((proc-name (or (procedure-name proc) '<anonymous>))
         (mod-name (if (null? mod-name)
-                      (symbol-module name)
+                      (symbol-module proc-name)
                       (car mod-name))))
     (make-xref proc proc-name mod-name)))
 
