@@ -50,7 +50,7 @@
 (define (find-module module-name)
   (and (module-name? module-name)
        (or (nested-ref (resolve-module '() #f) module-name)
-           (let ((m (resolve-module module-name)))
+           (let ((m (resolve-module module-name #f)))
              (beautify-user-module! m)
              m))))
 
