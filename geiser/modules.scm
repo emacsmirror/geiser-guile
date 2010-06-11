@@ -57,7 +57,7 @@
 (define (module-path module-name)
   (and (module-name? module-name)
        (or ((@@ (ice-9 session) module-filename) module-name)
-           (module-filename (resolve-module module-name)))))
+           (module-filename (resolve-module module-name #f)))))
 
 (define (submodules mod)
   (hash-map->list (lambda (k v) v) (module-submodules mod)))
@@ -82,18 +82,18 @@
           cs)))
 
 (define (module-exports mod-name)
-  (let* ((elts (hash-fold classify-module-object
+  (let* ((mod (catch #t
+                (lambda () (resolve-interface mod-name))
+                (lambda args (resolve-module mod-name))))
+         (elts (hash-fold classify-module-object
                           (list '() '() '())
-                          (module-obarray (maybe-module-interface mod-name))))
+                          (module-obarray mod)))
          (elts (map sort-symbols! elts)))
-    (list (cons 'modules (map (lambda (m) `(,@mod-name ,m)) (car elts)))
+    (list (cons 'modules (append
+                          (map module-name (submodules mod))
+                          (map (lambda (m) `(,@mod-name ,m)) (car elts))))
           (cons 'procs (cadr elts))
           (cons 'vars (caddr elts)))))
-
-(define (maybe-module-interface mod-name)
-  (catch #t
-    (lambda () (resolve-interface mod-name))
-    (lambda args (resolve-module mod-name))))
 
 (define (classify-module-object name var elts)
   (let ((obj (and (variable-bound? var)
