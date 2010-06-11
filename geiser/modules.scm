@@ -59,14 +59,27 @@
        (or ((@@ (ice-9 session) module-filename) module-name)
            (module-filename (resolve-module module-name)))))
 
+(define (submodules mod)
+  (hash-map->list (lambda (k v) v) (module-submodules mod)))
+
+(define (root-modules)
+  (submodules (resolve-module '() #f)))
+
 (define (all-modules)
-  (let ((roots ((@@ (ice-9 session) root-modules))))
-    (map (lambda (m)
-           (format "~A" (module-name m)))
-         (fold (lambda (m all)
-                 (append (all-child-modules m) all))
-               roots
-               roots))))
+  (let ((guile (resolve-module '(guile))))
+    (cons "(guile)"
+          (apply append
+                 (map (lambda (r)
+                        (map (lambda (m)
+                               (format "~A" (module-name m)))
+                             (all-child-modules r '())))
+                      (remove (lambda (m) (eq? m guile)) (root-modules)))))))
+
+(define (all-child-modules mod seen)
+  (let ((cs (filter (lambda (m) (not (member m seen))) (submodules mod))))
+    (fold (lambda (m all) (append (all-child-modules m all) all))
+          (list mod)
+          cs)))
 
 (define (module-exports mod-name)
   (let* ((elts (hash-fold classify-module-object
@@ -81,15 +94,6 @@
   (catch #t
     (lambda () (resolve-interface mod-name))
     (lambda args (resolve-module mod-name))))
-
-(define (child-modules mod)
-  (delq mod ((@@ (ice-9 session) submodules) mod)))
-
-(define (all-child-modules mod)
-  (let ((children (child-modules mod)))
-    (fold (lambda (m all)
-            (append (all-child-modules m) all))
-          children children)))
 
 (define (classify-module-object name var elts)
   (let ((obj (and (variable-bound? var)
