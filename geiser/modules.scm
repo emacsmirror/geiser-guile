@@ -88,10 +88,11 @@
          (elts (hash-fold classify-module-object
                           (list '() '() '())
                           (module-obarray mod)))
-         (elts (map sort-symbols! elts)))
-    (list (cons 'modules (append
-                          (map module-name (submodules mod))
-                          (map (lambda (m) `(,@mod-name ,m)) (car elts))))
+         (elts (map sort-symbols! elts))
+         (subs (map module-name (submodules (resolve-module mod-name #f)))))
+    (list (cons 'modules (append subs
+                                 (map (lambda (m)
+                                        `(,@mod-name ,m)) (car elts))))
           (cons 'procs (cadr elts))
           (cons 'vars (caddr elts)))))
 
