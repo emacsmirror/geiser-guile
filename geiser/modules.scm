@@ -66,14 +66,17 @@
   (submodules (resolve-module '() #f)))
 
 (define (all-modules)
-  (let ((guile (resolve-module '(guile))))
+  (define (not-anon m) (not (string-match "^[(]#[{]" m)))
+  (let* ((guile (resolve-module '(guile)))
+         (roots (remove (lambda (m) (eq? m guile)) (root-modules))))
     (cons "(guile)"
-          (apply append
-                 (map (lambda (r)
-                        (map (lambda (m)
-                               (format "~A" (module-name m)))
-                             (all-child-modules r '())))
-                      (remove (lambda (m) (eq? m guile)) (root-modules)))))))
+          (filter not-anon
+                  (apply append
+                         (map (lambda (r)
+                                (map (lambda (m)
+                                       (format "~A" (module-name m)))
+                                     (all-child-modules r '())))
+                              roots))))))
 
 (define (all-child-modules mod seen)
   (let ((cs (filter (lambda (m) (not (member m seen))) (submodules mod))))
