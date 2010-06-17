@@ -66,19 +66,16 @@
   (submodules (resolve-module '() #f)))
 
 (define (all-modules)
-  (define (not-anon m) (not (string-match "^[(]#[{]" m)))
+  (define (maybe-name m)
+    (let ((name (format "~A" (module-name m))))
+      (and (not (string-match "^[(]#[{]" name)) name)))
   (let* ((guile (resolve-module '(guile)))
          (roots (remove (lambda (m) (eq? m guile)) (root-modules))))
     (cons "(guile)"
-          (filter not-anon
-                  (apply append
-                         (map (lambda (r)
-                                (map (lambda (m)
-                                       (format "~A" (module-name m)))
-                                     (all-child-modules r '())))
-                              roots))))))
+          (filter-map maybe-name
+                      (apply append (map all-child-modules roots))))))
 
-(define (all-child-modules mod seen)
+(define* (all-child-modules mod #:optional (seen '()))
   (let ((cs (filter (lambda (m) (not (member m seen))) (submodules mod))))
     (fold (lambda (m all) (append (all-child-modules m all) all))
           (list mod)
