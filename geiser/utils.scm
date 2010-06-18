@@ -1,6 +1,6 @@
 ;;; utils.scm -- utility functions
 
-;; Copyright (C) 2009 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -13,7 +13,9 @@
   #:export (make-location
             symbol->object
             pair->list
-            sort-symbols!))
+            sort-symbols!
+            gensym?)
+  #:use-module (ice-9 regex))
 
 (define (symbol->object sym)
   (and (symbol? sym)
@@ -34,5 +36,11 @@
   (let ((cmp (lambda (l r)
                (string<? (symbol->string l) (symbol->string r)))))
     (sort! syms cmp)))
+
+(define (gensym? sym)
+  (and (symbol? sym) (gensym-name? (format "~A" sym))))
+
+(define (gensym-name? name)
+  (and (string-match "^#[{]" name) #t))
 
 ;;; utils.scm ends here

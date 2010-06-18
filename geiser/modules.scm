@@ -25,7 +25,7 @@
 
 (define (module-name? module-name)
   (and (list? module-name)
-       (> (length module-name) 0)
+       (not (null? module-name))
        (every symbol? module-name)))
 
 (define (symbol-module sym . all)
@@ -67,13 +67,13 @@
 
 (define (all-modules)
   (define (maybe-name m)
-    (let ((name (format "~A" (module-name m))))
-      (and (not (string-match "^[(]#[{]" name)) name)))
+    (let ((name (module-name m)))
+      (and (not (gensym? (car name)))
+           (format "~A" name))))
   (let* ((guile (resolve-module '(guile)))
-         (roots (remove (lambda (m) (eq? m guile)) (root-modules))))
-    (cons "(guile)"
-          (filter-map maybe-name
-                      (apply append (map all-child-modules roots))))))
+         (roots (remove (lambda (m) (eq? m guile)) (root-modules)))
+         (children (append-map all-child-modules roots)))
+    (cons "(guile)" (filter-map maybe-name children))))
 
 (define* (all-child-modules mod #:optional (seen '()))
   (let ((cs (filter (lambda (m) (not (member m seen))) (submodules mod))))
