@@ -38,14 +38,11 @@
     (and args (signature name args))))
 
 (define (signature id args-list)
-  (define (rem-gensyms args)
-    (map (lambda (s) (if (gensym? s) '_
-                         (if (list? s) (rem-gensyms s) s))) args))
   (define (arglst args kind)
     (let ((args (assq-ref args kind)))
-      (rem-gensyms (cond ((or (not args) (null? args)) '())
-                         ((list? args) args)
-                         (else (list args))))))
+      (cond ((or (not args) (null? args)) '())
+            ((list? args) args)
+            (else (list args)))))
   (define (mkargs as)
     `((required ,@(arglst as 'required))
       (optional ,@(arglst as 'optional)
