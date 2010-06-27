@@ -90,8 +90,18 @@ This function uses `geiser-guile-init-file' if it exists."
                (car (geiser-syntax--read-from-string module))) :f))
         (t :f)))
 
+(defun geiser-guile--module-cmd (module fmt &optional def)
+  (when module
+    (let* ((module (geiser-guile--get-module module))
+           (module (cond ((or (null module) (eq module :f)) def)
+                         (t (format "%s" module)))))
+      (and module (format fmt module)))))
+
+(defun geiser-guile--import-command (module)
+  (geiser-guile--module-cmd module ",i %s"))
+
 (defun geiser-guile--enter-command (module)
-  (and module (format ",m %s" (geiser-guile--get-module module))))
+  (geiser-guile--module-cmd module ",m %s" "(guile-user)"))
 
 (defun geiser-guile--symbol-begin (module)
   (if module
@@ -204,6 +214,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
   (enter-command geiser-guile--enter-command)
+  (import-command geiser-guile--import-command)
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
   (display-help)
