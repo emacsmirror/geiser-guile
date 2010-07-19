@@ -63,7 +63,8 @@ This function uses `geiser-guile-init-file' if it exists."
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 (defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
-(defconst geiser-guile--debugger-prompt-regexp "[0-9]+ debug> *")
+(defconst geiser-guile--debugger-prompt-regexp
+  "^[^() \n]+@([^)]*?) \\[[0-9]+\\]> ")
 
 
 ;;; Evaluation support:
