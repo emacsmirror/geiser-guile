@@ -52,10 +52,13 @@
   (let ((args-list (map mkargs (if (list? args-list) args-list '()))))
     (list id (cons 'args args-list))))
 
+(define default-macro-args '(((required ...))))
+
 (define (obj-args obj)
   (cond ((not obj) #f)
         ((or (procedure? obj) (program? obj)) (arguments obj))
-        ((macro? obj) '(((required ...))))
+        ((and (macro? obj) (macro-transformer obj)) => macro-args)
+        ((macro? obj) default-macro-args)
         (else 'variable)))
 
 (define (arguments proc)
@@ -78,6 +81,16 @@
           ((pair? formals)
            `((required . ,(car formals)) (rest . ,(cdr formals))))
           (else #f))))
+
+(define (macro-args tf)
+  (cond ((procedure-property tf 'patterns) =>
+         (lambda (pats)
+           (filter identity
+                   (map (lambda (p)
+                          (and (every symbol? p)
+                               (list (cons 'required p))))
+                        pats))))
+        (else default-macro-args)))
 
 (define (arity->args art)
   (define (gen-arg-names count)
