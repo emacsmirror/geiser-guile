@@ -65,6 +65,8 @@ This function uses `geiser-guile-init-file' if it exists."
 (defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
 (defconst geiser-guile--debugger-prompt-regexp
   "^[^() \n]+@([^)]*?) \\[[0-9]+\\]> ")
+(defconst geiser-guile--debugger-preamble-regexp
+  "^Entering a new prompt\\. ")
 
 
 ;;; Evaluation support:
@@ -140,7 +142,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--display-error (module key msg)
   (if (eq key 'geiser-debugger)
       (progn
-        (comint-send-string nil "0\n")
+        (comint-send-string nil ",locals\n")
         (accept-process-output nil 0.01)
         (when msg
           (goto-char (point-max))
@@ -198,6 +200,7 @@ This function uses `geiser-guile-init-file' if it exists."
          ("^ *\\([0-9]+\\): +" nil 1)
          ("at \\(/[^:\n]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)" 1 2 3)))
   (setq geiser-guile--load-path (geiser-guile--load-path))
+  (setq geiser-con--debugging-inhibits-eval nil)
   (compilation-setup t)
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
@@ -212,6 +215,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
+  (debugger-preamble-regexp geiser-guile--debugger-preamble-regexp)
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
   (enter-command geiser-guile--enter-command)
