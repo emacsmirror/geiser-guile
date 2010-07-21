@@ -83,14 +83,13 @@
           (else #f))))
 
 (define (macro-args tf)
-  (cond ((procedure-property tf 'patterns) =>
-         (lambda (pats)
-           (filter identity
-                   (map (lambda (p)
-                          (and (every symbol? p)
-                               (list (cons 'required p))))
-                        pats))))
-        (else default-macro-args)))
+  (let* ((pats (procedure-property tf 'patterns))
+         (args (and pats (filter identity
+                                 (map (lambda (p)
+                                        (and (every symbol? p)
+                                             (list (cons 'required p))))
+                                      pats)))))
+    (or (and args (not (null? args)) args) default-macro-args)))
 
 (define (arity->args art)
   (define (gen-arg-names count)
