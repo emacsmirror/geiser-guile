@@ -225,6 +225,8 @@ This function uses `geiser-guile-init-file' if it exists."
   (display-help)
   (check-buffer geiser-guile--guess))
 
+(geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile nil)
+
 
 (provide 'geiser-guile)
 ;;; geiser-guile.el ends here
