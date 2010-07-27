@@ -49,8 +49,11 @@
                 ,@(let ((rest (assq-ref as 'rest)))
                     (if rest (list "...") '())))
       (key ,@(arglst as 'keyword))))
-  (let ((args-list (map mkargs (if (list? args-list) args-list '()))))
-    (list id (cons 'args args-list))))
+  (let* ((args-list (map mkargs (if (list? args-list) args-list '())))
+         (value (if (null? args-list)
+                    (format #f "~s" (symbol->object id))
+                    "")))
+    (list id (cons 'args args-list) (cons 'value value))))
 
 (define default-macro-args '(((required ...))))
 
