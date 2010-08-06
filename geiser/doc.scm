@@ -19,6 +19,7 @@
   #:use-module (ice-9 session)
   #:use-module (ice-9 documentation)
   #:use-module (ice-9 regex)
+  #:use-module (ice-9 format)
   #:use-module (oop goops)
   #:use-module (srfi srfi-1))
 
@@ -51,7 +52,7 @@
       (key ,@(arglst as 'keyword))))
   (let* ((args-list (map mkargs (if (list? args-list) args-list '())))
          (value (if (null? args-list)
-                    (format #f "~s" (symbol->object id))
+                    (format #f "~:@y" (symbol->object id))
                     "")))
     (list id (cons 'args args-list) (cons 'value value))))
 
