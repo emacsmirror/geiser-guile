@@ -195,7 +195,7 @@
               (display " in module ")
               (display modname)))
         (newline)
-        (if doc (display doc))))))
+        (if doc (begin (newline) (display doc)))))))
 
 (define (obj-signature sym obj)
   (let ((args (obj-args obj)))
