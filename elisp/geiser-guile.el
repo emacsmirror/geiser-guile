@@ -142,13 +142,8 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--display-error (module key msg)
   (if (eq key 'geiser-debugger)
       (progn
-        (comint-send-string nil ",locals\n")
-        (accept-process-output nil 0.01)
-        (when msg
-          (goto-char (point-max))
-          (comint-previous-prompt 1)
-          (insert "\n" msg)
-          (goto-char (point-max))))
+        (goto-char (point-max))
+        (comint-send-string nil ",bt\n"))
     (when key
       (insert "Error: ")
       (geiser--insert-with-face (format "%s" key) 'bold)
