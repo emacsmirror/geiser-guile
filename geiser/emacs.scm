@@ -27,6 +27,7 @@
                ge:callees
                ge:find-file)
   #:export (ge:no-values)
+  #:export (ge:newline)
   #:use-module (geiser evaluation)
   #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))
@@ -34,5 +35,6 @@
   #:use-module ((geiser doc) :renamer (symbol-prefix-proc 'ge:)))
 
 (define (ge:no-values) (values))
+(define ge:newline newline)
 
 ;;; emacs.scm ends here
