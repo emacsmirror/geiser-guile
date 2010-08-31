@@ -101,7 +101,7 @@ This function uses `geiser-guile-init-file' if it exists."
       (and module (format fmt module)))))
 
 (defun geiser-guile--import-command (module)
-  (geiser-guile--module-cmd module ",i %s"))
+  (geiser-guile--module-cmd module ",use %s"))
 
 (defun geiser-guile--enter-command (module)
   (geiser-guile--module-cmd module ",m %s" "(guile-user)"))
