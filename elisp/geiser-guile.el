@@ -44,6 +44,12 @@ started."
   :type 'string
   :group 'geiser-guile)
 
+(geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
+  "Whether to autmatically show a full backtrace when entering the debugger.
+If `nil', only the last frame is shown."
+  :type 'boolean
+  :group 'geiser-guile)
+
 
 ;;; REPL support:
 
@@ -141,9 +147,13 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--display-error (module key msg)
   (if (eq key 'geiser-debugger)
-      (progn
+      (let ((bt-cmd (format ",%s\n"
+                            (if geiser-guile-debug-show-bt-p "bt" "fr"))))
         (goto-char (point-max))
-        (comint-send-string nil ",bt\n"))
+        (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
+        (comint-send-string nil ",error-message\n")
+        (comint-send-string nil bt-cmd)
+        (message "Debug REPL. Enter ,q to quit, ,h for help."))
     (when key
       (insert "Error: ")
       (geiser--insert-with-face (format "%s" key) 'bold)
