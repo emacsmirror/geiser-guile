@@ -120,49 +120,16 @@ This function uses `geiser-guile-init-file' if it exists."
 
 
 ;;; Error display
-(defvar geiser-guile--file-cache (make-hash-table :test 'equal))
-
-(defun geiser-guile--resolve-file (file)
-  (when (and (stringp file) (not (string-equal file "unknown file")))
-    (if (file-name-absolute-p file) file
-      (or (gethash file geiser-guile--file-cache)
-          (puthash file
-                   (geiser-eval--send/result `(:eval ((:ge find-file) ,file)))
-                   geiser-guile--file-cache)))))
-
-(defconst geiser-guile--file-rx
-  "^In \\([^\n:]+\\):\n *\\([[:digit:]]+\\|\\?\\):")
-
-(defun geiser-guile--find-files ()
-  (with--geiser-implementation 'guile
-    (save-excursion
-      (while (re-search-forward geiser-guile--file-rx nil t)
-        (let ((file (match-string 1))
-              (beg (match-beginning 1))
-              (end (match-end 1))
-              (line (string-to-number (or (match-string 2) "0"))))
-          (let ((file (geiser-guile--resolve-file file)))
-            (when file
-              (geiser-edit--make-link beg end file line 0))))))))
 
 (defun geiser-guile--display-error (module key msg)
-  (if (eq key 'geiser-debugger)
-      (let ((bt-cmd (format ",%s\n"
-                            (if geiser-guile-debug-show-bt-p "bt" "fr"))))
-        (goto-char (point-max))
-        (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
-        (comint-send-string nil ",error-message\n")
-        (comint-send-string nil bt-cmd)
-        (message "Debug REPL. Enter ,q to quit, ,h for help."))
-    (when key
-      (insert "Error: ")
-      (geiser--insert-with-face (format "%s" key) 'bold)
-      (newline 2))
-    (when msg
-      (let ((p (point)))
-        (insert msg)
-        (goto-char p)
-        (geiser-guile--find-files))))
+  (when (eq key 'geiser-debugger)
+    (let ((bt-cmd (format ",%s\n"
+                          (if geiser-guile-debug-show-bt-p "bt" "fr"))))
+      (goto-char (point-max))
+      (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
+      (comint-send-string nil ",error-message\n")
+      (comint-send-string nil bt-cmd)
+      (message "Debug REPL. Enter ,q to quit, ,h for help.")))
   t)
 
 
@@ -180,31 +147,28 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile--rel-path-rx "^In +\\([^/\n :]+\\):\n")
 
-(make-variable-buffer-local
- (defvar geiser-guile--load-path nil))
+(defvar geiser-guile--file-cache (make-hash-table :test 'equal))
 
-(defun geiser-guile--load-path ()
-  (geiser-eval--send/result `(:eval (:scm "%load-path"))))
-
-(defun geiser-guile--find-in-load-path (f ps)
-  (when ps
-    (let ((c (expand-file-name f (car ps))))
-      (or (and (file-exists-p c) c)
-          (geiser-guile--find-in-load-path f (cdr ps))))))
+(defun geiser-guile--resolve-file (file)
+  (when (and (stringp file) (not (string-equal file "unknown file")))
+    (if (file-name-absolute-p file) file
+      (or (gethash file geiser-guile--file-cache)
+          (puthash file
+                   (geiser-eval--send/result `(:eval ((:ge find-file) ,file)))
+                   geiser-guile--file-cache)))))
 
 (defun geiser-guile--resolve-file-x ()
-  (let ((f (match-string-no-properties 1)))
-    (if (file-name-absolute-p f)
-        (list f)
-      (let ((f (geiser-guile--find-in-load-path f geiser-guile--load-path)))
-        (and f (list f))))))
+  (let ((f (geiser-guile--resolve-file (match-string-no-properties 1))))
+    (and f (list f))))
+
+
+;;; REPL startup
 
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
          ("^ *\\([0-9]+\\): +" nil 1)
          ("at \\(/[^:\n]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)" 1 2 3)))
-  (setq geiser-guile--load-path (geiser-guile--load-path))
   (setq geiser-con--debugging-inhibits-eval nil)
   (compilation-setup t)
   (font-lock-add-keywords nil
