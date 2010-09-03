@@ -47,12 +47,9 @@
 (define (module-location name)
   (make-location (module-path name) #f))
 
-(define (find-module module-name)
-  (and (module-name? module-name)
-       (or (nested-ref (resolve-module '() #f) module-name)
-           (let ((m (resolve-module module-name #f)))
-             (beautify-user-module! m)
-             m))))
+(define (find-module mod-name)
+  (and (module-name? mod-name)
+       (resolve-module mod-name #f #:ensure #f)))
 
 (define (module-path module-name)
   (and (module-name? module-name)
