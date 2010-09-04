@@ -64,9 +64,7 @@
 
 (define (all-modules)
   (define (maybe-name m)
-    (let ((name (module-name m)))
-      (and (not (gensym? (car name)))
-           (format "~A" name))))
+    (and (module-kind m) (format "~A" (module-name m))))
   (let* ((guile (resolve-module '(guile)))
          (roots (remove (lambda (m) (eq? m guile)) (root-modules)))
          (children (append-map all-child-modules roots)))
