@@ -48,20 +48,19 @@
   (cond ((not (program? p)) #f)
         ((program-source p 0) =>
          (lambda (s) (make-location (program-path p) (source:line s))))
-        ((program-path p) =>
-         (lambda (s) (make-location (program-path p) #f)))
+        ((program-path p) => (lambda (s) (make-location s #f)))
         (else #f)))
 
 (define (program-path p)
   (let* ((mod (program-module p))
-         (name (and mod (module-name mod))))
+         (name (and (module? mod) (module-name mod))))
     (and name (module-path name))))
 
 (define (procedure-xref proc . mod-name)
-  (let ((proc-name (or (procedure-name proc) '<anonymous>))
-        (mod-name (if (null? mod-name)
-                      (symbol-module proc-name)
-                      (car mod-name))))
+  (let* ((proc-name (or (procedure-name proc) '<anonymous>))
+         (mod-name (if (null? mod-name)
+                       (symbol-module proc-name)
+                       (car mod-name))))
     (make-xref proc proc-name mod-name)))
 
 (define (callers sym)
