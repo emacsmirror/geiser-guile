@@ -170,8 +170,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
-         ("^ *\\([0-9]+\\): +" nil 1)
-         ("at \\(/[^:\n]+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\)" 1 2 3)))
+         ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
   (setq geiser-con--debugging-inhibits-eval nil)
   (compilation-setup t)
   (font-lock-add-keywords nil
