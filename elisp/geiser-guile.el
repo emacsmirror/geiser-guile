@@ -134,7 +134,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Error display
 
-(defun geiser-guile--display-error (module key msg)
+(defun geiser-guile--enter-debugger ()
   (when (eq key 'geiser-debugger)
     (let ((bt-cmd (format ",%s\n"
                           (if geiser-guile-debug-show-bt-p "bt" "fr"))))
@@ -148,8 +148,13 @@ This function uses `geiser-guile-init-file' if it exists."
       (when geiser-guile-jump-on-debug-p
         (accept-process-output (get-buffer-process (current-buffer))
                                0.2 nil t)
-        (ignore-errors (next-error)))))
-  t)
+        (ignore-errors (next-error))))))
+
+(defun geiser-guile--display-error (module key msg)
+  (newline)
+  (save-excursion (insert msg))
+  (geiser-edit--buttonize-files)
+  (and (not key) msg (not (zerop (length msg)))))
 
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
@@ -201,6 +206,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (arglist geiser-guile--parameters)
   (startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
+  (enter-debugger geiser-guile--enter-debugger)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (debugger-preamble-regexp geiser-guile--debugger-preamble-regexp)
   (marshall-procedure geiser-guile--geiser-procedure)
