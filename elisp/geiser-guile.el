@@ -52,6 +52,17 @@ If `nil', only the last frame is shown."
   :type 'boolean
   :group 'geiser-guile)
 
+(geiser-custom--defcustom geiser-guile-jump-on-debug-p nil
+  "Whether to autmatically jump to error when entering the debugger.
+If `t', Geiser will use `next-error' to jump to the error's location."
+  :type 'boolean
+  :group 'geiser-guile)
+
+(geiser-custom--defcustom geiser-guile-show-debug-help-p t
+  "Whether to show brief help in the echo area when entering the debugger."
+  :type 'boolean
+  :group 'geiser-guile)
+
 
 ;;; REPL support:
 
@@ -132,7 +143,12 @@ This function uses `geiser-guile-init-file' if it exists."
       (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
       (comint-send-string nil ",error-message\n")
       (comint-send-string nil bt-cmd)
-      (message "Debug REPL. Enter ,q to quit, ,h for help.")))
+      (when geiser-guile-show-debug-help-p
+        (message "Debug REPL. Enter ,q to quit, ,h for help."))
+      (when geiser-guile-jump-on-debug-p
+        (accept-process-output (get-buffer-process (current-buffer))
+                               0.2 nil t)
+        (ignore-errors (next-error)))))
   t)
 
 
