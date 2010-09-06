@@ -19,6 +19,7 @@
   #:use-module (srfi srfi-1)
   #:use-module (language tree-il)
   #:use-module (system base compile)
+  #:use-module (system base message)
   #:use-module (system base pmatch)
   #:use-module (system vm program)
   #:use-module (ice-9 pretty-print))
@@ -38,31 +39,43 @@
   (write (list (cons 'result result) (cons 'output output)))
   (newline))
 
+(define compile-opts '(#:warnings (arity-mismatch unbound-variable)))
+
+(define (call-with-result thunk)
+  (letrec* ((result #f)
+            (output
+             (with-output-to-string
+               (lambda ()
+                 (with-fluids ((*current-warning-port* (current-output-port)))
+                   (set! result (thunk)))))))
+    (write-result result output)))
+
 (define (ge:compile form module-name)
   (let* ((module (or (find-module module-name) (current-module)))
-         (result #f)
          (ev (lambda ()
-               (set! result
-                     (call-with-values
-                         (lambda ()
-                           (let* ((o (compile form
-                                              #:to 'objcode #:env module))
-                                  (thunk (make-program o)))
-                             (start-stack 'geiser-evaluation-stack
-                                          (eval `(,thunk) module))))
-                       (lambda vs (map object->string vs)))))))
-    (let ((output (with-output-to-string ev)))
-      (write-result result output))))
+               (call-with-values
+                   (lambda ()
+                     (let* ((o (compile form
+                                        #:to 'objcode
+                                        #:env module
+                                        #:opts compile-opts))
+                            (thunk (make-program o)))
+                       (start-stack 'geiser-evaluation-stack
+                                    (eval `(,thunk) module))))
+                 (lambda vs (map object->string vs))))))
+    (call-with-result ev)))
 
 (define ge:eval ge:compile)
 
 (define (ge:compile-file path)
-  (write-result
-   (let ((cr (compile-file path #:canonicalization 'absolute)))
-     (and cr
-          (list (object->string (save-module-excursion
-                                 (lambda () (load-compiled cr)))))))
-   ""))
+  (call-with-result
+   (lambda ()
+     (let ((cr (compile-file path
+                             #:canonicalization 'absolute
+                             #:opts compile-opts)))
+       (and cr
+            (list (object->string (save-module-excursion
+                                   (lambda () (load-compiled cr))))))))))
 
 (define ge:load-file ge:compile-file)
 
