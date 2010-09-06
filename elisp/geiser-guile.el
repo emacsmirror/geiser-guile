@@ -152,8 +152,9 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--display-error (module key msg)
   (newline)
-  (save-excursion (insert msg))
-  (geiser-edit--buttonize-files)
+  (when (stringp msg)
+    (save-excursion (insert msg))
+    (geiser-edit--buttonize-files))
   (and (not key) msg (not (zerop (length msg)))))
 
 
