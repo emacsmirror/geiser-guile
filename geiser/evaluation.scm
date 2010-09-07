@@ -10,11 +10,12 @@
 ;; Start date: Mon Mar 02, 2009 02:46
 
 (define-module (geiser evaluation)
-  #:export (ge:eval
-            ge:compile
+  #:export (compile/warns
+            compile/no-warns
             ge:macroexpand
             ge:compile-file
-            ge:load-file)
+            ge:load-file
+            ge:set-warnings)
   #:use-module (geiser modules)
   #:use-module (srfi srfi-1)
   #:use-module (language tree-il)
@@ -39,7 +40,26 @@
   (write (list (cons 'result result) (cons 'output output)))
   (newline))
 
-(define compile-opts '(#:warnings (arity-mismatch unbound-variable)))
+(define compile-opts (make-fluid))
+(define compile-file-opts (make-fluid))
+
+(define default-warnings '(arity-mismatch unbound-variable))
+(define verbose-warnings `(unused-variable ,@default-warnings))
+
+(define (ge:set-warnings wl)
+  (let* ((warns (cond ((list? wl) wl)
+                      ((symbol? wl) (case wl
+                                      ((none nil null) '())
+                                      ((medium default) default-warnings)
+                                      ((high verbose) verbose-warnings)))
+                      (else '())))
+         (fwarns (if (memq 'unused-variable warns)
+                     (cons 'unused-toplevel warns)
+                     warns)))
+    (fluid-set! compile-opts (list #:warnings warns))
+    (fluid-set! compile-file-opts (list #:warnings fwarns))))
+
+(ge:set-warnings 'none)
 
 (define (call-with-result thunk)
   (letrec* ((result #f)
@@ -50,7 +70,11 @@
                    (set! result (thunk)))))))
     (write-result result output)))
 
-(define (ge:compile form module-name)
+(define (compile/no-warns form module)
+  (with-fluids ((compile-opts '()))
+    (compile/warns form module)))
+
+(define (compile/warns form module-name)
   (let* ((module (or (find-module module-name) (current-module)))
          (ev (lambda ()
                (call-with-values
@@ -58,21 +82,19 @@
                      (let* ((o (compile form
                                         #:to 'objcode
                                         #:env module
-                                        #:opts compile-opts))
+                                        #:opts (fluid-ref compile-opts)))
                             (thunk (make-program o)))
                        (start-stack 'geiser-evaluation-stack
                                     (eval `(,thunk) module))))
                  (lambda vs (map object->string vs))))))
     (call-with-result ev)))
 
-(define ge:eval ge:compile)
-
 (define (ge:compile-file path)
   (call-with-result
    (lambda ()
      (let ((cr (compile-file path
                              #:canonicalization 'absolute
-                             #:opts compile-opts)))
+                             #:opts (fluid-ref compile-file-opts))))
        (and cr
             (list (object->string (save-module-excursion
                                    (lambda () (load-compiled cr))))))))))

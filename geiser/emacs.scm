@@ -10,9 +10,7 @@
 ;; Start date: Sun Feb 08, 2009 18:39
 
 (define-module (geiser emacs)
-  #:re-export (ge:eval
-               ge:compile
-               ge:macroexpand
+  #:re-export (ge:macroexpand
                ge:compile-file
                ge:load-file
                ge:autodoc
@@ -26,8 +24,10 @@
                ge:callers
                ge:callees
                ge:find-file)
-  #:export (ge:no-values)
-  #:export (ge:newline)
+  #:export (ge:compile
+            ge:no-values
+            ge:newline)
+  #:use-module (ice-9 match)
   #:use-module (geiser evaluation)
   #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))
@@ -36,5 +36,11 @@
 
 (define (ge:no-values) (values))
 (define ge:newline newline)
+
+(define (ge:compile form mod)
+  (match form
+    (`((@ (geiser emacs) . ,_) . ,_) (compile/no-warns form mod))
+    (_ (compile/warns form mod))))
+
 
 ;;; emacs.scm ends here
