@@ -148,6 +148,9 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--enter-command (module)
   (geiser-guile--module-cmd module ",m %s" "(guile-user)"))
 
+
+(defun geiser-guile--exit-command () ",q")
+
 (defun geiser-guile--symbol-begin (module)
   (if module
       (max (save-excursion (beginning-of-line) (point))
@@ -158,20 +161,19 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Error display
 
 (defun geiser-guile--enter-debugger ()
-  (when (eq key 'geiser-debugger)
-    (let ((bt-cmd (format ",%s\n"
-                          (if geiser-guile-debug-show-bt-p "bt" "fr"))))
-      (compilation-forget-errors)
-      (goto-char (point-max))
-      (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
-      (comint-send-string nil ",error-message\n")
-      (comint-send-string nil bt-cmd)
-      (when geiser-guile-show-debug-help-p
-        (message "Debug REPL. Enter ,q to quit, ,h for help."))
-      (when geiser-guile-jump-on-debug-p
-        (accept-process-output (get-buffer-process (current-buffer))
-                               0.2 nil t)
-        (ignore-errors (next-error))))))
+  (let ((bt-cmd (format ",%s\n"
+                        (if geiser-guile-debug-show-bt-p "bt" "fr"))))
+    (compilation-forget-errors)
+    (goto-char (point-max))
+    (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
+    (comint-send-string nil ",error-message\n")
+    (comint-send-string nil bt-cmd)
+    (when geiser-guile-show-debug-help-p
+      (message "Debug REPL. Enter ,q to quit, ,h for help."))
+    (when geiser-guile-jump-on-debug-p
+      (accept-process-output (get-buffer-process (current-buffer))
+                             0.2 nil t)
+      (ignore-errors (next-error)))))
 
 (defun geiser-guile--display-error (module key msg)
   (newline)
@@ -245,6 +247,7 @@ The new level is set using the value of `geiser-guile-warning-level'."
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
   (enter-command geiser-guile--enter-command)
+  (exit-command geiser-guile--exit-command)
   (import-command geiser-guile--import-command)
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
