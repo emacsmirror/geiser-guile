@@ -63,6 +63,29 @@ If `t', Geiser will use `next-error' to jump to the error's location."
   :type 'boolean
   :group 'geiser-guile)
 
+(geiser-custom--defcustom geiser-guile-warning-level 'medium
+  "Verbosity of the warnings reported by Guile.
+
+You can choose either one of the predefined warning sets, or
+provide a list of symbols identifying the ones you want. Possible
+choices are arity-mismatch, unbound-variable, unused-variable and
+unused-toplevel. Unrecognised symbols are ignored.
+
+The predefined levels are:
+
+  - Medium: arity-mismatch, unbound-variable
+  - High: arity-mismatch, unbound-variable, unused-variable
+  - None: no warnings
+
+Changes to the value of this variable will automatically take
+effect on new REPLs. For existing ones, use the command
+\\[geiser-guile-update-warning-level]."
+  :type '(choice (const :tag "Medium (arity and unbound vars)" medium)
+                 (const :tag "High (also unused vars)" high)
+                 (const :tag "No warnings" none)
+                 (repeat :tag "Custom" symbol))
+  :group 'geiser-guile)
+
 
 ;;; REPL support:
 
@@ -189,6 +212,14 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; REPL startup
 
+(defun geiser-guile-update-warning-level ()
+  "Update the warning level used by the REPL.
+The new level is set using the value of `geiser-guile-warning-level'."
+  (interactive)
+  (let ((code `(:eval (ge:set-warnings ',geiser-guile-warning-level)
+                      (geiser evaluation))))
+    (geiser-eval--send/result code)))
+
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
@@ -197,7 +228,8 @@ This function uses `geiser-guile-init-file' if it exists."
   (compilation-setup t)
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
-                                                    compilation-error-face))))
+                                                    compilation-error-face)))
+  (geiser-guile-update-warning-level))
 
 
 ;;; Implementation definition:
