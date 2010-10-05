@@ -11,6 +11,7 @@
 
 
 
+(require 'geiser-connection)
 (require 'geiser-syntax)
 (require 'geiser-custom)
 (require 'geiser-base)
