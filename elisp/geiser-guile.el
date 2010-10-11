@@ -101,7 +101,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-    "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+    "-q"
     ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
@@ -223,6 +223,13 @@ The new level is set using the value of `geiser-guile-warning-level'."
                       (geiser evaluation))))
     (geiser-eval--send/result code)))
 
+(defun connect-to-guile ()
+  "Start a Guile REPL connected to a remote process.
+
+Start the external Guile process with the flag --listen to make
+it spawn a server thread."
+  (geiser-connect 'guile))
+
 (defun geiser-guile--startup ()
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
@@ -232,6 +239,9 @@ The new level is set using the value of `geiser-guile-warning-level'."
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
+  (geiser-eval--send/result
+   `(:scm ,(format "(set! %%load-path (cons %S %%load-path))"
+                   (expand-file-name "guile/" geiser-scheme-dir))))
   (geiser-guile-update-warning-level))
 
 
