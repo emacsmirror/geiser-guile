@@ -224,11 +224,11 @@ The new level is set using the value of `geiser-guile-warning-level'."
     (geiser-eval--send/result code)))
 
 (defun connect-to-guile ()
-  (interactive)
   "Start a Guile REPL connected to a remote process.
 
 Start the external Guile process with the flag --listen to make
 it spawn a server thread."
+  (interactive)
   (geiser-connect 'guile))
 
 (defun geiser-guile--startup ()
