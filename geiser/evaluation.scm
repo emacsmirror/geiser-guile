@@ -40,8 +40,8 @@
   (write (list (cons 'result result) (cons 'output output)))
   (newline))
 
-(define compile-opts (make-fluid))
-(define compile-file-opts (make-fluid))
+(define compile-opts '())
+(define compile-file-opts '())
 
 (define default-warnings '(arity-mismatch unbound-variable))
 (define verbose-warnings `(unused-variable ,@default-warnings))
@@ -51,13 +51,14 @@
                       ((symbol? wl) (case wl
                                       ((none nil null) '())
                                       ((medium default) default-warnings)
-                                      ((high verbose) verbose-warnings)))
+                                      ((high verbose) verbose-warnings)
+                                      (else '())))
                       (else '())))
          (fwarns (if (memq 'unused-variable warns)
                      (cons 'unused-toplevel warns)
                      warns)))
-    (fluid-set! compile-opts (list #:warnings warns))
-    (fluid-set! compile-file-opts (list #:warnings fwarns))))
+    (set! compile-opts (list #:warnings warns))
+    (set! compile-file-opts (list #:warnings fwarns))))
 
 (ge:set-warnings 'none)
 
@@ -71,10 +72,12 @@
     (write-result result output)))
 
 (define (compile/no-warns form module)
-  (with-fluids ((compile-opts '()))
-    (compile/warns form module)))
+  (compile* form module '()))
 
-(define (compile/warns form module-name)
+(define (compile/warns form module)
+  (compile* form module compile-opts))
+
+(define (compile* form module-name opts)
   (let* ((module (or (find-module module-name) (current-module)))
          (ev (lambda ()
                (call-with-values
@@ -82,7 +85,7 @@
                      (let* ((o (compile form
                                         #:to 'objcode
                                         #:env module
-                                        #:opts (fluid-ref compile-opts)))
+                                        #:opts opts))
                             (thunk (make-program o)))
                        (start-stack 'geiser-evaluation-stack
                                     (eval `(,thunk) module))))
@@ -94,7 +97,7 @@
    (lambda ()
      (let ((cr (compile-file path
                              #:canonicalization 'absolute
-                             #:opts (fluid-ref compile-file-opts))))
+                             #:opts compile-file-opts)))
        (and cr
             (list (object->string (save-module-excursion
                                    (lambda () (load-compiled cr))))))))))
