@@ -10,8 +10,8 @@
 ;; Start date: Mon Mar 02, 2009 02:46
 
 (define-module (geiser evaluation)
-  #:export (compile/warns
-            compile/no-warns
+  #:export (ge:compile
+            ge:eval
             ge:macroexpand
             ge:compile-file
             ge:load-file
@@ -71,10 +71,7 @@
                    (set! result (thunk)))))))
     (write-result result output)))
 
-(define (compile/no-warns form module)
-  (compile* form module '()))
-
-(define (compile/warns form module)
+(define (ge:compile form module)
   (compile* form module compile-opts))
 
 (define (compile* form module-name opts)
@@ -89,6 +86,14 @@
                             (thunk (make-program o)))
                        (start-stack 'geiser-evaluation-stack
                                     (eval `(,thunk) module))))
+                 (lambda vs (map object->string vs))))))
+    (call-with-result ev)))
+
+(define (ge:eval form module-name)
+  (let* ((module (or (find-module module-name) (current-module)))
+         (ev (lambda ()
+               (call-with-values
+                   (lambda () (eval form module))
                  (lambda vs (map object->string vs))))))
     (call-with-result ev)))
 
