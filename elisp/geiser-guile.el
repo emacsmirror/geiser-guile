@@ -114,9 +114,16 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Evaluation support:
 
-(defun geiser-guile--geiser-procedure (proc)
-  (let ((proc (intern (format "ge:%s" (if (eq proc 'eval) 'compile proc)))))
-    `(@ (geiser emacs) ,proc)))
+(defun geiser-guile--geiser-procedure (proc &rest args)
+  (case proc
+    ((eval compile) (format "((@ (geiser emacs) ge:compile) '%s '%s)"
+                            (mapconcat 'identity (cdr args) " ")
+                            (or (car args) "#f")))
+    ((load-file compile-file)
+     (format "((@ (geiser emacs) ge:%s) %s)" proc (car args)))
+    ((no-values) "((@ (guile) values))")
+    (t (format "(apply (@ (geiser emacs) ge:%s) (list %s))"
+               proc (mapconcat 'identity args "")))))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
@@ -205,7 +212,7 @@ This function uses `geiser-guile-init-file' if it exists."
     (if (file-name-absolute-p file) file
       (or (gethash file geiser-guile--file-cache)
           (puthash file
-                   (geiser-eval--send/result `(:eval ((:ge find-file) ,file)))
+                   (geiser-eval--send/result `(:eval (:ge find-file ,file)))
                    geiser-guile--file-cache)))))
 
 (defun geiser-guile--resolve-file-x ()
