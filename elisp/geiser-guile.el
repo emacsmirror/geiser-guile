@@ -113,17 +113,25 @@ This function uses `geiser-guile-init-file' if it exists."
 
 
 ;;; Evaluation support:
+(defun geiser-guile--linearize (str)
+  (if (string-match "\n" str)
+      (with-temp-buffer
+        (insert str)
+        (subst-char-in-region (point-min) (point-max) ?\n ? t)
+        (buffer-string))
+    str))
+
+(defsubst geiser-guile--linearize-args (args)
+  (mapconcat 'geiser-guile--linearize args " "))
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
   (case proc
-    ((eval compile) (format "((@ (geiser emacs) ge:compile) '%s '%s)"
-                            (mapconcat 'identity (cdr args) " ")
-                            (or (car args) "#f")))
-    ((load-file compile-file)
-     (format "((@ (geiser emacs) ge:%s) %s)" proc (car args)))
-    ((no-values) "((@ (guile) values))")
-    (t (format "(apply (@ (geiser emacs) ge:%s) (list %s))"
-               proc (mapconcat 'identity args "")))))
+    ((eval compile) (format ",geiser-eval %s %s"
+                            (or (car args) "#f")
+                            (geiser-guile--linearize-args (cdr args))))
+    ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
+    ((no-values) ",geiser-no-values")
+    (t (format "ge:%s %s" proc (geiser-guile--linearize-args args)))))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
@@ -247,9 +255,10 @@ it spawn a server thread."
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
-  (geiser-eval--send/result
-   `(:scm ,(format "(set! %%load-path (cons %S %%load-path))"
-                   (expand-file-name "guile/" geiser-scheme-dir))))
+  (geiser-eval--send/wait
+   (format "(set! %%load-path (cons %S %%load-path))"
+           (expand-file-name "guile/" geiser-scheme-dir)))
+  (geiser-eval--send/wait ",use (geiser emacs)")
   (geiser-guile-update-warning-level))
 
 
