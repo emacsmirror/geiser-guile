@@ -28,7 +28,6 @@ No-op command used internally by Geiser."
 (define-meta-command ((geiser-eval geiser) repl mod form . args)
   "geiser-eval
 Meta-command used by Geiser to evaluate and compile code."
-  (display form) (newline)
   (if (null? args)
       (ge:compile form mod)
       (let ((proc (eval form this-module)))
