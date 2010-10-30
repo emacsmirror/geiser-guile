@@ -12,6 +12,7 @@
 (define-module (geiser emacs)
   #:use-module (ice-9 match)
   #:use-module (system repl command)
+  #:use-module (system repl error-handling)
   #:use-module (geiser evaluation)
   #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
   #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))
@@ -29,11 +30,18 @@ No-op command used internally by Geiser."
   "geiser-eval
 Meta-command used by Geiser to evaluate and compile code."
   (if (null? args)
-      (ge:compile form mod)
+      (call-with-error-handling
+       (lambda () (ge:compile form mod)))
       (let ((proc (eval form this-module)))
         (ge:eval `(,proc ,@args) mod))))
 
 (define-meta-command ((geiser-load-file geiser) repl file)
   "geiser-load-file
 Meta-command used by Geiser to load and compile files."
-  (ge:compile-file file))
+  (call-with-error-handling
+   (lambda () (ge:compile-file file))))
+
+(define-meta-command ((geiser-newline geiser) repl)
+  "geiser-newline
+Meta-command used by Geiser to emit a new line."
+  (newline))
