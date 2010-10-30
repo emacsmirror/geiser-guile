@@ -185,7 +185,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (if geiser-guile-debug-show-bt-p "bt" "fr"))))
     (compilation-forget-errors)
     (goto-char (point-max))
-    (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
+    (comint-send-string nil ",geiser-newline\n")
     (comint-send-string nil ",error-message\n")
     (comint-send-string nil bt-cmd)
     (when geiser-guile-show-debug-help-p
