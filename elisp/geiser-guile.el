@@ -134,7 +134,10 @@ This function uses `geiser-guile-init-file' if it exists."
     (t (format "ge:%s %s" proc (geiser-guile--linearize-args args)))))
 
 (defconst geiser-guile--module-re
-  "(\\(?:define-module\\|library\\) +\\(([^)]+)\\)")
+  "(define-module +\\(([^)]+)\\)")
+
+(defconst geiser-guile--library-re
+  "(library +\\(([^)]+)\\)")
 
 (defun geiser-guile--get-module (&optional module)
   (cond ((null module)
@@ -142,7 +145,8 @@ This function uses `geiser-guile-init-file' if it exists."
            (ignore-errors
              (while (not (zerop (geiser-syntax--nesting-level)))
                (backward-up-list)))
-           (if (re-search-backward geiser-guile--module-re nil t)
+           (if (or (re-search-backward geiser-guile--module-re nil t)
+                   (looking-at geiser-guile--library-re))
                (geiser-guile--get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
