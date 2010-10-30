@@ -134,7 +134,7 @@ This function uses `geiser-guile-init-file' if it exists."
     (t (format "ge:%s %s" proc (geiser-guile--linearize-args args)))))
 
 (defconst geiser-guile--module-re
-  "(define-module +\\(([^)]+)\\)")
+  "(\\(?:define-module\\|library\\) +\\(([^)]+)\\)")
 
 (defun geiser-guile--get-module (&optional module)
   (cond ((null module)
