@@ -87,12 +87,14 @@
           (else #f))))
 
 (define (macro-args tf)
+  (define* (collect args #:optional (req '()))
+    (cond ((null? args) (arglist->args `(,(reverse req) #f #f r #f)))
+          ((symbol? args) (arglist->args `(,(reverse req) #f #f r ,args)))
+          ((and (pair? args) (symbol? (car args)))
+           (collect (cdr args) (cons (car args) req)))
+          (else #f)))
   (let* ((pats (procedure-property tf 'patterns))
-         (args (and pats (filter identity
-                                 (map (lambda (p)
-                                        (and (every symbol? p)
-                                             (list (cons 'required p))))
-                                      pats)))))
+         (args (and pats (filter-map collect pats))))
     (or (and args (not (null? args)) args) default-macro-args)))
 
 (define (arity->args art)
