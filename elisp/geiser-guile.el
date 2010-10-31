@@ -125,8 +125,8 @@ This function uses `geiser-guile-init-file' if it exists."
               (end-of-line)
               (kill-region p (point)))))
         (goto-char (point-min))
-        (while (re-search-forward "[ \t\n\r][ \t\n\r]+" nil t)
-          (replace-match " " nil nil))
+        (while (search-forward-regexp "\n[ \t\r\n]*" nil t)
+          (replace-match " "))
         (buffer-string))
     str))
 
