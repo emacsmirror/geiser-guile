@@ -113,34 +113,18 @@ This function uses `geiser-guile-init-file' if it exists."
 
 
 ;;; Evaluation support:
-(defun geiser-guile--linearize (str)
-  (if (string-match "\n" str)
-      (with-temp-buffer
-        (set-syntax-table scheme-mode-syntax-table)
-        (insert str)
-        (goto-char (point-min))
-        (let ((kill-whole-line nil))
-          (while (> (skip-syntax-forward "^<") 0)
-            (let ((p (point)))
-              (end-of-line)
-              (kill-region p (point)))))
-        (goto-char (point-min))
-        (while (search-forward-regexp "\n[ \t\r\n]*" nil t)
-          (replace-match " "))
-        (buffer-string))
-    str))
-
 (defsubst geiser-guile--linearize-args (args)
-  (mapconcat 'geiser-guile--linearize args " "))
+  (mapconcat 'identity args " "))
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
   (case proc
-    ((eval compile) (format ",geiser-eval %s %s"
+    ((eval compile) (format ",geiser-eval %s %s%s"
                             (or (car args) "#f")
-                            (geiser-guile--linearize-args (cdr args))))
+                            (geiser-guile--linearize-args (cdr args))
+                            (if (cddr args) "" " ()")))
     ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
     ((no-values) ",geiser-no-values")
-    (t (format "ge:%s %s" proc (geiser-guile--linearize-args args)))))
+    (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
