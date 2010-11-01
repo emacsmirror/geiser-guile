@@ -26,7 +26,7 @@
 No-op command used internally by Geiser."
   (values))
 
-(define-meta-command ((geiser-eval geiser) repl mod form . args)
+(define-meta-command ((geiser-eval geiser) repl (mod form args) . rest)
   "geiser-eval
 Meta-command used by Geiser to evaluate and compile code."
   (if (null? args)
