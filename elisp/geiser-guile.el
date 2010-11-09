@@ -139,8 +139,9 @@ This function uses `geiser-guile-init-file' if it exists."
              :f)))
         ((listp module) module)
         ((stringp module)
-         (or (ignore-errors (car (geiser-syntax--read-from-string module)))
-             :f))
+         (condition-case nil
+             (car (geiser-syntax--read-from-string module))
+           (error :f)))
         (t :f)))
 
 (defun geiser-guile--module-cmd (module fmt &optional def)
@@ -251,7 +252,7 @@ it spawn a server thread."
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
-  (geiser-eval--send/result
+  (geiser-eval--send/wait
    `(:scm ,(format "(set! %%load-path (cons %S %%load-path))"
                    (expand-file-name "guile/" geiser-scheme-dir))))
   (geiser-guile-update-warning-level))
