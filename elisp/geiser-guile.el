@@ -144,8 +144,9 @@ This function uses `geiser-guile-init-file' if it exists."
              :f)))
         ((listp module) module)
         ((stringp module)
-         (or (ignore-errors (car (geiser-syntax--read-from-string module)))
-             :f))
+         (condition-case nil
+             (car (geiser-syntax--read-from-string module))
+           (error :f)))
         (t :f)))
 
 (defun geiser-guile--module-cmd (module fmt &optional def)
@@ -198,10 +199,14 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
 
+(defconst geiser-guile--guess-re
+  (format "\\(%s\\|#! *.+\\(/\\| \\)guile\\( *\\\\\\)?\\)"
+          geiser-guile--module-re))
+
 (defun geiser-guile--guess ()
   (save-excursion
     (goto-char (point-min))
-    (re-search-forward geiser-guile--module-re nil t)))
+    (re-search-forward geiser-guile--guess-re nil t)))
 
 
 ;;; Compilation shell regexps
