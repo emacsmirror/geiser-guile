@@ -113,20 +113,24 @@ This function uses `geiser-guile-init-file' if it exists."
 
 
 ;;; Evaluation support:
+(defsubst geiser-guile--linearize-args (args)
+  (mapconcat 'identity args " "))
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
   (case proc
-    ((eval compile) (format "((@ (geiser emacs) ge:compile) '%s '%s)"
-                            (mapconcat 'identity (cdr args) " ")
-                            (or (car args) "#f")))
-    ((load-file compile-file)
-     (format "((@ (geiser emacs) ge:%s) %s)" proc (car args)))
-    ((no-values) "((@ (guile) values))")
-    (t (format "(apply (@ (geiser emacs) ge:%s) (list %s))"
-               proc (mapconcat 'identity args "")))))
+    ((eval compile) (format ",geiser-eval %s %s%s"
+                            (or (car args) "#f")
+                            (geiser-guile--linearize-args (cdr args))
+                            (if (cddr args) "" " ()")))
+    ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
+    ((no-values) ",geiser-no-values")
+    (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
+
+(defconst geiser-guile--library-re
+  "(library +\\(([^)]+)\\)")
 
 (defun geiser-guile--get-module (&optional module)
   (cond ((null module)
@@ -134,7 +138,8 @@ This function uses `geiser-guile-init-file' if it exists."
            (ignore-errors
              (while (not (zerop (geiser-syntax--nesting-level)))
                (backward-up-list)))
-           (if (re-search-backward geiser-guile--module-re nil t)
+           (if (or (re-search-backward geiser-guile--module-re nil t)
+                   (looking-at geiser-guile--library-re))
                (geiser-guile--get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
@@ -174,7 +179,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (if geiser-guile-debug-show-bt-p "bt" "fr"))))
     (compilation-forget-errors)
     (goto-char (point-max))
-    (comint-send-string nil "((@ (geiser emacs) ge:newline))\n")
+    (comint-send-string nil ",geiser-newline\n")
     (comint-send-string nil ",error-message\n")
     (comint-send-string nil bt-cmd)
     (when geiser-guile-show-debug-help-p
@@ -252,8 +257,9 @@ it spawn a server thread."
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
   (geiser-eval--send/wait
-   `(:scm ,(format "(set! %%load-path (cons %S %%load-path))"
-                   (expand-file-name "guile/" geiser-scheme-dir))))
+   (format "(set! %%load-path (cons %S %%load-path))"
+           (expand-file-name "guile/" geiser-scheme-dir)))
+  (geiser-eval--send/wait ",use (geiser emacs)")
   (geiser-guile-update-warning-level))
 
 
