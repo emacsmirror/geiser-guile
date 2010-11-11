@@ -247,7 +247,6 @@ it spawn a server thread."
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
          ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
-  (setq geiser-con--debugging-inhibits-eval nil)
   (compilation-setup t)
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
