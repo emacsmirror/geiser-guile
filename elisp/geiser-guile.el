@@ -108,7 +108,7 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
 (defconst geiser-guile--prompt-regexp "[^@()]+@([^)]*?)> ")
 (defconst geiser-guile--debugger-prompt-regexp
-  "^[^@()]+@([^)]*?) \\[[0-9]+\\]> ")
+  "[^@()]+@([^)]*?) \\[[0-9]+\\]> ")
 
 
 ;;; Evaluation support:
@@ -117,7 +117,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
   (case proc
-    ((eval compile) (format ",geiser-eval %s %s%s\n"
+    ((eval compile) (format ",geiser-eval %s %s%s"
                             (or (car args) "#f")
                             (geiser-guile--linearize-args (cdr args))
                             (if (cddr args) "" " ()")))
@@ -178,6 +178,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (if geiser-guile-debug-show-bt-p "bt" "fr"))))
     (compilation-forget-errors)
     (goto-char (point-max))
+    (geiser-repl--swap)
     (comint-send-string nil ",geiser-newline\n")
     (comint-send-string nil ",error-message\n")
     (comint-send-string nil bt-cmd)
@@ -226,7 +227,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--resolve-file-x ()
   (let ((f (geiser-guile--resolve-file (match-string-no-properties 1))))
-    (and f (list f))))
+    (and (stringp f) (list f))))
 
 
 ;;; REPL startup
