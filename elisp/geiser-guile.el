@@ -263,8 +263,8 @@ it spawn a server thread."
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
   (when remote
-    (geiser-eval--send/wait (concat (geiser-guile--load-path-string) "\n"))
-    (geiser-eval--send/wait ",use (geiser emacs)\n"))
+    (geiser-repl--send-silent (geiser-guile--load-path-string))
+    (geiser-repl--send-silent ",use (geiser emacs)"))
   (geiser-guile-update-warning-level))
 
 (defconst geiser-guile--init-server-command
