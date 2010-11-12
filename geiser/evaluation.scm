@@ -50,7 +50,6 @@
 
 (define (write-result result output)
   (write (list (cons 'result result) (cons 'output output)))
-  (write-char #\nul)
   (newline))
 
 (define (call-with-result thunk)
