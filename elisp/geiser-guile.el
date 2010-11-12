@@ -174,13 +174,11 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Error display
 
 (defun geiser-guile--enter-debugger ()
-  (let ((bt-cmd (format ",%s\n"
+  (let ((bt-cmd (format ",geiser-newline\n,error-message\n,%s\n"
                         (if geiser-guile-debug-show-bt-p "bt" "fr"))))
     (compilation-forget-errors)
     (goto-char (point-max))
-    (geiser-repl--swap)
-    (comint-send-string nil ",geiser-newline\n")
-    (comint-send-string nil ",error-message\n")
+    (geiser-repl--prepare-send)
     (comint-send-string nil bt-cmd)
     (when geiser-guile-show-debug-help-p
       (message "Debug REPL. Enter ,q to quit, ,h for help."))
@@ -266,10 +264,16 @@ it spawn a server thread."
   (when remote
     (geiser-repl--send-silent (geiser-guile--load-path-string))
     (geiser-repl--send-silent ",use (geiser emacs)"))
-  (geiser-guile-update-warning-level))
+  (geiser-guile-update-warning-level)
+  )
 
-(defconst geiser-guile--init-server-command
-  ",use (geiser emacs)\n,geiser-start-server")
+(defun geiser-guile--init-server-command ()
+  (comint-kill-region (point-min) (point-max))
+  (setq comint-prompt-regexp "inferior-guile> ")
+  (comint-send-string nil ",option prompt \"inferior-guile> \"\n")
+  (comint-send-string nil ",use (geiser emacs)\n")
+  (geiser-inf--wait-for-prompt 10000)
+  ",geiser-start-server")
 
 
 ;;; Implementation definition:
