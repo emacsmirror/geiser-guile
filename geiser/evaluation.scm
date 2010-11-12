@@ -25,20 +25,6 @@
   #:use-module (system vm program)
   #:use-module (ice-9 pretty-print))
 
-(define (handle-error stack . args)
-  (pmatch args
-    ((,key ,subr ,msg ,args . ,rest)
-     (display "Backtrace:\n")
-     (if (stack? stack)
-         (display-backtrace stack (current-output-port)))
-     (newline)
-     (display-error stack (current-output-port) subr msg args rest))
-    (else (display (format "ERROR: ~a, args: ~a" (car args) (cdr args)))))
-  `(error (key . ,(car args))))
-
-(define (write-result result output)
-  (write (list (cons 'result result) (cons 'output output)))
-  (newline))
 
 (define compile-opts '())
 (define compile-file-opts '())
@@ -61,6 +47,10 @@
     (set! compile-file-opts (list #:warnings fwarns))))
 
 (ge:set-warnings 'none)
+
+(define (write-result result output)
+  (write (list (cons 'result result) (cons 'output output)))
+  (newline))
 
 (define (call-with-result thunk)
   (letrec* ((result #f)
