@@ -101,15 +101,14 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-    "-q"
+    "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
     ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
-(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
+;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
+(defconst geiser-guile--prompt-regexp "[^@()]+@([^)]*?)> ")
 (defconst geiser-guile--debugger-prompt-regexp
-  "^[^() \n]+@([^)]*?) \\[[0-9]+\\]> ")
-(defconst geiser-guile--debugger-preamble-regexp
-  "^Entering a new prompt\\. ")
+  "^[^@()]+@([^)]*?) \\[[0-9]+\\]> ")
 
 
 ;;; Evaluation support:
@@ -118,7 +117,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
   (case proc
-    ((eval compile) (format ",geiser-eval %s %s%s"
+    ((eval compile) (format ",geiser-eval %s %s%s\n"
                             (or (car args) "#f")
                             (geiser-guile--linearize-args (cdr args))
                             (if (cddr args) "" " ()")))
@@ -248,7 +247,14 @@ it spawn a server thread."
   (interactive)
   (geiser-connect 'guile))
 
-(defun geiser-guile--startup ()
+(defun geiser-guile--load-path-string ()
+  (let* ((path (expand-file-name "guile/" geiser-scheme-dir))
+         (witness "geiser/emacs.scm")
+         (code `(if (not (%search-load-path ,witness))
+                    (set! %load-path (cons ,path %load-path)))))
+    (geiser-eval--scheme-str code)))
+
+(defun geiser-guile--startup (remote)
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
          ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
@@ -256,11 +262,13 @@ it spawn a server thread."
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
-  (geiser-eval--send/wait
-   (format "(set! %%load-path (cons %S %%load-path))"
-           (expand-file-name "guile/" geiser-scheme-dir)))
-  (geiser-eval--send/wait ",use (geiser emacs)")
+  (when remote
+    (geiser-eval--send/wait (concat (geiser-guile--load-path-string) "\n"))
+    (geiser-eval--send/wait ",use (geiser emacs)\n"))
   (geiser-guile-update-warning-level))
+
+(defconst geiser-guile--init-server-command
+  ",use (geiser emacs)\n,geiser-start-server")
 
 
 ;;; Implementation definition:
@@ -268,11 +276,12 @@ it spawn a server thread."
 (define-geiser-implementation guile
   (binary geiser-guile--binary)
   (arglist geiser-guile--parameters)
-  (startup geiser-guile--startup)
+  (repl-startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
-  (enter-debugger geiser-guile--enter-debugger)
+  (inferior-prompt-regexp geiser-guile--prompt-regexp)
+  (init-server-command geiser-guile--init-server-command)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
-  (debugger-preamble-regexp geiser-guile--debugger-preamble-regexp)
+  (enter-debugger geiser-guile--enter-debugger)
   (marshall-procedure geiser-guile--geiser-procedure)
   (find-module geiser-guile--get-module)
   (enter-command geiser-guile--enter-command)
