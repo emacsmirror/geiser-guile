@@ -262,18 +262,9 @@ it spawn a server thread."
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
   (when remote
-    (geiser-repl--send-silent (geiser-guile--load-path-string))
-    (geiser-repl--send-silent ",use (geiser emacs)"))
-  (geiser-guile-update-warning-level)
-  )
-
-(defun geiser-guile--init-server-command ()
-  (comint-kill-region (point-min) (point-max))
-  (setq comint-prompt-regexp "inferior-guile> ")
-  (comint-send-string nil ",option prompt \"inferior-guile> \"\n")
-  (comint-send-string nil ",use (geiser emacs)\n")
-  (geiser-inf--wait-for-prompt 10000)
-  ",geiser-start-server")
+    (geiser-repl--send-silent (geiser-guile--load-path-string)))
+  (geiser-repl--send-silent ",use (geiser emacs)")
+  (geiser-guile-update-warning-level))
 
 
 ;;; Implementation definition:
@@ -283,8 +274,6 @@ it spawn a server thread."
   (arglist geiser-guile--parameters)
   (repl-startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
-  (inferior-prompt-regexp geiser-guile--prompt-regexp)
-  (init-server-command geiser-guile--init-server-command)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (enter-debugger geiser-guile--enter-debugger)
   (marshall-procedure geiser-guile--geiser-procedure)
