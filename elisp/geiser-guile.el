@@ -87,6 +87,11 @@ effect on new REPLs. For existing ones, use the command
                  (repeat :tag "Custom" symbol))
   :group 'geiser-guile)
 
+(geiser-custom--defcustom geiser-guile-extra-keywords nil
+  "Extra keywords highlighted in Guile scheme buffers."
+  :type '(repeat string)
+  :group 'geiser-guile)
+
 
 ;;; REPL support:
 
@@ -207,6 +212,13 @@ This function uses `geiser-guile-init-file' if it exists."
     (re-search-forward geiser-guile--guess-re nil t)))
 
 
+;;; Keywords
+(defun geiser-guile--keywords ()
+  (when geiser-guile-extra-keywords
+    `((,(format "[[(]%s\\>" (regexp-opt geiser-guile-extra-keywords 1))
+       . 1))))
+
+
 ;;; Compilation shell regexps
 
 (defconst geiser-guile--path-rx "^In \\([^:\n ]+\\):\n")
@@ -284,7 +296,8 @@ it spawn a server thread."
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
   (display-help)
-  (check-buffer geiser-guile--guess))
+  (check-buffer geiser-guile--guess)
+  (keywords geiser-guile--keywords))
 
 (geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile nil)
 
