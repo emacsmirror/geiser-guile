@@ -67,7 +67,7 @@ If `t', Geiser will use `next-error' to jump to the error's location."
 (geiser-custom--defcustom geiser-guile-warning-level 'medium
   "Verbosity of the warnings reported by Guile.
 
-You can choose either one of the predefined warning sets, or
+You can either choose one of the predefined warning sets, or
 provide a list of symbols identifying the ones you want. Possible
 choices are arity-mismatch, unbound-variable, unused-variable and
 unused-toplevel. Unrecognised symbols are ignored.
