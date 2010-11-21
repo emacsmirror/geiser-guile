@@ -246,7 +246,7 @@ This function uses `geiser-guile-init-file' if it exists."
   "Update the warning level used by the REPL.
 The new level is set using the value of `geiser-guile-warning-level'."
   (interactive)
-  (let ((code `(:eval (ge:set-warnings ',geiser-guile-warning-level)
+  (let ((code `(:eval (:ge set-warnings ',geiser-guile-warning-level)
                       (geiser evaluation))))
     (geiser-eval--send/result code)))
 
