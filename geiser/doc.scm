@@ -12,6 +12,7 @@
 (define-module (geiser doc)
   #:export (autodoc
             symbol-documentation
+            module-exports
             object-signature)
   #:use-module (geiser utils)
   #:use-module (geiser modules)
@@ -58,9 +59,17 @@
 
 (define default-macro-args '(((required ...))))
 
+(define geiser-args-key (gensym "geiser-args-key-"))
+
 (define (obj-args obj)
   (cond ((not obj) #f)
-        ((or (procedure? obj) (program? obj)) (arguments obj))
+        ((or (procedure? obj) (program? obj))
+         (cond ((procedure-property obj geiser-args-key))
+               ((arguments obj) =>
+                (lambda (args)
+                  (set-procedure-property! obj geiser-args-key args)
+                  args))
+               (else #f)))
         ((and (macro? obj) (macro-transformer obj)) => macro-args)
         ((macro? obj) default-macro-args)
         (else 'variable)))
@@ -121,17 +130,12 @@
 (define (doc->args proc)
   (define proc-rx "-- Scheme Procedure: ([^[\n]+)\n")
   (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[^\n]+\\]+)?)")
-  (cond ((procedure-property proc 'geiser-document-args))
-        ((object-documentation proc)
-         => (lambda (doc)
-              (let* ((match (or (string-match proc-rx doc)
-                                (string-match proc-rx2 doc)))
-                     (args (and match
-                                (parse-signature-string
-                                 (match:substring match 1)))))
-                (set-procedure-property! proc 'geiser-document-args args)
-                args)))
-        (else #f)))
+  (let ((doc (object-documentation proc)))
+    (and doc
+         (let ((match (or (string-match proc-rx doc)
+                          (string-match proc-rx2 doc))))
+           (and match
+                (parse-signature-string (match:substring match 1)))))))
 
 (define (parse-signature-string str)
   (define opt-arg-rx "\\[([^] ]+)\\]?")
@@ -204,4 +208,36 @@
   (let ((args (obj-args obj)))
     (and args (signature sym args))))
 
-;;; doc.scm ends here
+(define (module-exports mod-name)
+  (define elt-sort (make-symbol-sort car))
+  (let* ((mod (catch #t
+                (lambda () (resolve-interface mod-name))
+                (lambda args (resolve-module mod-name))))
+         (elts (hash-fold classify-module-object
+                          (list '() '() '())
+                          (module-obarray mod)))
+         (elts (map elt-sort elts))
+         (subs (map (lambda (m) (list (module-name m)))
+                    (submodules (resolve-module mod-name #f)))))
+    (list (cons 'modules subs)
+          (cons 'procs (car elts))
+          (cons 'syntax (cadr elts))
+          (cons 'vars (caddr elts)))))
+
+(define (classify-module-object name var elts)
+  (let ((obj (and (variable-bound? var)
+                  (variable-ref var))))
+    (cond ((or (not obj) (module? obj)) elts)
+          ((or (procedure? obj) (program? obj))
+           (list (cons (list name `(signature . ,(obj-signature name obj)))
+                       (car elts))
+                 (cadr elts)
+                 (caddr elts)))
+          ((macro? obj)
+           (list (car elts)
+                 (cons (list name `(signature . ,(obj-signature name obj)))
+                       (cadr elts))
+                 (caddr elts)))
+          (else (list (car elts)
+                      (cadr elts)
+                      (cons (list name) (caddr elts)))))))

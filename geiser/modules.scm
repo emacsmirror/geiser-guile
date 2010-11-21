@@ -15,7 +15,7 @@
             module-path
             find-module
             all-modules
-            module-exports
+            submodules
             module-location)
   #:use-module (geiser utils)
   #:use-module (system vm program)
@@ -76,35 +76,3 @@
           (list mod)
           cs)))
 
-(define (module-exports mod-name)
-  (let* ((mod (catch #t
-                (lambda () (resolve-interface mod-name))
-                (lambda args (resolve-module mod-name))))
-         (elts (hash-fold classify-module-object
-                          (list '() '() '())
-                          (module-obarray mod)))
-         (elts (map sort-symbols! elts))
-         (subs (map module-name (submodules (resolve-module mod-name #f)))))
-    (list (cons 'modules (append subs
-                                 (map (lambda (m)
-                                        `(,@mod-name ,m)) (car elts))))
-          (cons 'procs (cadr elts))
-          (cons 'vars (caddr elts)))))
-
-(define (classify-module-object name var elts)
-  (let ((obj (and (variable-bound? var)
-                  (variable-ref var))))
-    (cond ((not obj) elts)
-          ((and (module? obj) (eq? (module-kind obj) 'directory))
-           (list (cons name (car elts))
-                 (cadr elts)
-                 (caddr elts)))
-          ((or (procedure? obj) (program? obj) (macro? obj))
-           (list (car elts)
-                 (cons name (cadr elts))
-                 (caddr elts)))
-          (else (list (car elts)
-                      (cadr elts)
-                      (cons name (caddr elts)))))))
-
-;;; modules.scm ends here

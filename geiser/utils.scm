@@ -14,6 +14,7 @@
             symbol->object
             pair->list
             sort-symbols!
+            make-symbol-sort
             gensym?)
   #:use-module (ice-9 regex))
 
@@ -36,6 +37,13 @@
   (let ((cmp (lambda (l r)
                (string<? (symbol->string l) (symbol->string r)))))
     (sort! syms cmp)))
+
+(define (make-symbol-sort sel)
+  (let ((cmp (lambda (a b)
+               (string<? (symbol->string (sel a))
+                         (symbol->string (sel b))))))
+    (lambda (syms)
+      (sort! syms cmp))))
 
 (define (gensym? sym)
   (and (symbol? sym) (gensym-name? (format "~A" sym))))
