@@ -17,6 +17,7 @@
 (require 'geiser-base)
 (require 'geiser-eval)
 (require 'geiser-edit)
+(require 'geiser-log)
 (require 'geiser)
 
 (require 'compile)
@@ -279,10 +280,14 @@ it spawn a server thread."
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
-  (when remote
-    (geiser-repl--send-silent (geiser-guile--load-path-string)))
-  (geiser-repl--send-silent ",use (geiser emacs)")
-  (geiser-guile-update-warning-level))
+  (let ((geiser-log-verbose-p t))
+    (when remote
+      (geiser-log--info
+       "Guile: initialising load path...  %s"
+       (geiser-repl--send-silent (geiser-guile--load-path-string))))
+    (geiser-log--info "Guile: using (geiser emacs)... %s"
+                      (geiser-repl--send-silent ",use (geiser emacs)"))
+    (geiser-guile-update-warning-level)))
 
 
 ;;; Manual lookup
@@ -329,4 +334,3 @@ it spawn a server thread."
 
 
 (provide 'geiser-guile)
-;;; geiser-guile.el ends here
