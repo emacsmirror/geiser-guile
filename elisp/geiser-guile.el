@@ -20,6 +20,7 @@
 (require 'geiser)
 
 (require 'compile)
+(require 'info-look)
 
 
 ;;; Customization:
@@ -90,6 +91,11 @@ effect on new REPLs. For existing ones, use the command
 (geiser-custom--defcustom geiser-guile-extra-keywords nil
   "Extra keywords highlighted in Guile scheme buffers."
   :type '(repeat string)
+  :group 'geiser-guile)
+
+(geiser-custom--defcustom geiser-guile-manual-lookup-other-window-p nil
+  "Non-nil means pop up the Info buffer in another window."
+  :type 'boolean
   :group 'geiser-guile)
 
 
@@ -279,6 +285,26 @@ it spawn a server thread."
   (geiser-guile-update-warning-level))
 
 
+;;; Manual lookup
+(info-lookup-add-help :topic 'symbol :mode 'geiser-guile-mode
+                      :ignore-case nil
+                      :regexp "[^()`',\" 	\n]+"
+                      :doc-spec
+                      '(("(r5rs)Index" nil "^[ 	]+-+ [^:]+:[ 	]*" "\\b")
+                        ("(Guile)R5RS Index" nil "^ - [^:]+: " "\\b")
+                        ("(Guile)Procedure Index" nil "^ - [^:]+: " "\\b")
+                        ("(Guile)Variable Index" nil "^ - [^:]+: " "\\b")))
+
+(defun guile--manual-look-up (id mod)
+  (let ((info-lookup-other-window-flag
+         geiser-guile-manual-lookup-other-window-p))
+    (info-lookup-symbol id 'geiser-guile-mode))
+  (when geiser-guile-manual-lookup-other-window-p
+    (switch-to-buffer-other-window "*info*"))
+  (search-forward (format "%s" id) nil t))
+
+
+
 ;;; Implementation definition:
 
 (define-geiser-implementation guile
@@ -295,7 +321,7 @@ it spawn a server thread."
   (import-command geiser-guile--import-command)
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
-  (display-help)
+  (external-help guile--manual-look-up)
   (check-buffer geiser-guile--guess)
   (keywords geiser-guile--keywords))
 
