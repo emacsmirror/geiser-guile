@@ -235,7 +235,8 @@ This function uses `geiser-guile-init-file' if it exists."
 (defvar geiser-guile--file-cache (make-hash-table :test 'equal))
 
 (defun geiser-guile--resolve-file (file)
-  (when (and (stringp file) (not (string-equal file "unknown file")))
+  (when (and (stringp file)
+             (not (member file '("socket" "stdin" "unknown file"))))
     (if (file-name-absolute-p file) file
       (or (gethash file geiser-guile--file-cache)
           (puthash file
@@ -265,12 +266,13 @@ it spawn a server thread."
   (interactive)
   (geiser-connect 'guile))
 
-(defun geiser-guile--load-path-string ()
+(defun geiser-guile--set-load-path ()
   (let* ((path (expand-file-name "guile/" geiser-scheme-dir))
          (witness "geiser/emacs.scm")
-         (code `(if (not (%search-load-path ,witness))
-                    (set! %load-path (cons ,path %load-path)))))
-    (geiser-eval--scheme-str code)))
+         (code `(begin (if (not (%search-load-path ,witness))
+                           (set! %load-path (cons ,path %load-path)))
+                       'done)))
+    (geiser-eval--send/wait code)))
 
 (defun geiser-guile--startup (remote)
   (set (make-local-variable 'compilation-error-regexp-alist)
@@ -281,12 +283,8 @@ it spawn a server thread."
                           `((,geiser-guile--path-rx 1
                                                     compilation-error-face)))
   (let ((geiser-log-verbose-p t))
-    (when remote
-      (geiser-log--info
-       "Guile: initialising load path...  %s"
-       (geiser-repl--send-silent (geiser-guile--load-path-string))))
-    (geiser-log--info "Guile: using (geiser emacs)... %s"
-                      (geiser-repl--send-silent ",use (geiser emacs)"))
+    (when remote (geiser-guile--set-load-path))
+    (geiser-eval--send/wait ",use (geiser emacs)\n'done")
     (geiser-guile-update-warning-level)))
 
 
