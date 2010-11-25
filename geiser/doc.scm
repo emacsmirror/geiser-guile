@@ -29,7 +29,7 @@
       '()
       (map (lambda (id) (or (autodoc* id) (list id))) ids)))
 
-(define (autodoc* id)
+(define* (autodoc* id)
   (let ((args (obj-args (symbol->object id))))
     (and args
          `(,@(signature id args)
@@ -39,7 +39,10 @@
   (let ((args (obj-args obj)))
     (and args (signature name args))))
 
-(define (signature id args-list)
+(define (value-str obj)
+  (format #f "~:@y" obj))
+
+(define* (signature id args-list #:optional (detail #t))
   (define (arglst args kind)
     (let ((args (assq-ref args kind)))
       (cond ((or (not args) (null? args)) '())
@@ -52,10 +55,9 @@
                     (if rest (list "...") '())))
       (key ,@(arglst as 'keyword))))
   (let* ((args-list (map mkargs (if (list? args-list) args-list '())))
-         (value (if (null? args-list)
-                    (format #f "~:@y" (symbol->object id))
-                    "")))
-    (list id (cons 'args args-list) (cons 'value value))))
+         (value (and (and detail (null? args-list))
+                     (value-str (symbol->object id)))))
+    `(,id (args ,@args-list) ,@(if value `((value . ,value)) '()))))
 
 (define default-macro-args '(((required ...))))
 
@@ -184,10 +186,12 @@
 (define (symbol-documentation sym)
   (let ((obj (symbol->object sym)))
     (if obj
-        `((signature . ,(or (obj-signature sym obj) sym))
+        `((signature . ,(or (obj-signature sym obj #f) sym))
           (docstring . ,(docstring sym obj))))))
 
 (define (docstring sym obj)
+  (define (valuable?)
+    (not (or (macro? obj) (procedure? obj) (program? obj))))
   (with-output-to-string
     (lambda ()
       (let* ((type (cond ((macro? obj) "A macro")
@@ -200,13 +204,19 @@
         (if modname
             (begin
               (display " in module ")
-              (display modname)))
+              (display modname)
+              (display ".")))
         (newline)
-        (if doc (begin (newline) (display doc)))))))
+        (if doc (begin (newline) (display doc)))
+        (if (valuable?) (begin (newline)
+                               (display "Value:")
+                               (newline)
+                               (display "   ")
+                               (display (value-str obj))))))))
 
-(define (obj-signature sym obj)
+(define* (obj-signature sym obj #:optional (detail #t))
   (let ((args (obj-args obj)))
-    (and args (signature sym args))))
+    (and args (signature sym args detail))))
 
 (define (module-exports mod-name)
   (define elt-sort (make-symbol-sort car))
