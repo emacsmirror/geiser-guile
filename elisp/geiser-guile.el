@@ -114,8 +114,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (expand-file-name geiser-guile-init-file))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
     "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
-    ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
-                             geiser-guile-load-path))
+    ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 ;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
