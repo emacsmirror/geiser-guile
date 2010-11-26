@@ -30,8 +30,8 @@
           (else (loop (cdr d) (cons (car d) s))))))
 
 (define (make-location file line)
-  (list (cons 'file (if (string? file) file '()))
-        (cons 'line (if (number? line) (+ 1 line) '()))))
+  (list (cons "file" (if (string? file) file '()))
+        (cons "line" (if (number? line) (+ 1 line) '()))))
 
 (define (sort-symbols! syms)
   (let ((cmp (lambda (l r)

@@ -40,9 +40,9 @@
 
 (define (make-xref proc name module)
   (and proc
-       `((location . ,(or (program-location proc) (symbol-location name)))
-         (signature . ,(object-signature name proc))
-         (module . ,(or module '())))))
+       `(("location" . ,(or (program-location proc) (symbol-location name)))
+         ("signature" . ,(object-signature name proc))
+         ("module" . ,(or module '())))))
 
 (define (program-location p)
   (cond ((not (program? p)) #f)
@@ -82,5 +82,3 @@
     (if (null? dirs) #f
         (let ((candidate (string-append (car dirs) "/" path)))
           (if (file-exists? candidate) candidate (loop (cdr dirs)))))))
-
-;;; xref.scm ends here
