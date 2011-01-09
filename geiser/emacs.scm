@@ -1,6 +1,6 @@
 ;;; emacs.scm -- procedures for emacs interaction: entry point
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -15,10 +15,10 @@
   #:use-module (system repl error-handling)
   #:use-module (system repl server)
   #:use-module (geiser evaluation)
-  #:use-module ((geiser modules) :renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser completion) :renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser xref) :renamer (symbol-prefix-proc 'ge:))
-  #:use-module ((geiser doc) :renamer (symbol-prefix-proc 'ge:)))
+  #:use-module ((geiser modules) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((geiser completion) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((geiser xref) #:renamer (symbol-prefix-proc 'ge:))
+  #:use-module ((geiser doc) #:renamer (symbol-prefix-proc 'ge:)))
 
 (define this-module (resolve-module '(geiser emacs)))
 
