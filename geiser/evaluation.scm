@@ -1,6 +1,6 @@
 ;;; evaluation.scm -- evaluation, compilation and macro-expansion
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -15,7 +15,8 @@
             ge:macroexpand
             ge:compile-file
             ge:load-file
-            ge:set-warnings)
+            ge:set-warnings
+            ge:add-to-load-path)
   #:use-module (geiser modules)
   #:use-module (srfi srfi-1)
   #:use-module (language tree-il)
@@ -104,3 +105,9 @@
     (with-output-to-string
       (lambda ()
         (pretty-print (tree-il->scheme (macroexpand form)))))))
+
+(define (ge:add-to-load-path dir)
+  (and (file-is-directory? dir)
+       (not (member dir %load-path))
+       (begin (set! %load-path (cons dir %load-path))
+              #t)))
