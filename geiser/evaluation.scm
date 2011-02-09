@@ -30,7 +30,7 @@
 (define compile-opts '())
 (define compile-file-opts '())
 
-(define default-warnings '(arity-mismatch unbound-variable))
+(define default-warnings '(arity-mismatch unbound-variable format))
 (define verbose-warnings `(unused-variable ,@default-warnings))
 
 (define (ge:set-warnings wl)
