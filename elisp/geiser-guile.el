@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -76,8 +76,8 @@ unused-toplevel. Unrecognised symbols are ignored.
 
 The predefined levels are:
 
-  - Medium: arity-mismatch, unbound-variable
-  - High: arity-mismatch, unbound-variable, unused-variable
+  - Medium: arity-mismatch, unbound-variable, format
+  - High: arity-mismatch, unbound-variable, unused-variable, format
   - None: no warnings
 
 Changes to the value of this variable will automatically take
