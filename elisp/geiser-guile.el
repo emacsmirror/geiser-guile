@@ -328,7 +328,7 @@ it spawn a server thread."
   (check-buffer geiser-guile--guess)
   (keywords geiser-guile--keywords))
 
-(geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile nil)
+(geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile t)
 
 
 (provide 'geiser-guile)
