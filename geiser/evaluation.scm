@@ -58,7 +58,8 @@
             (output
              (with-output-to-string
                (lambda ()
-                 (with-fluids ((*current-warning-port* (current-output-port)))
+                 (with-fluids ((*current-warning-port* (current-output-port))
+                               (*current-warning-prefix* ""))
                    (set! result (thunk)))))))
     (write-result result output)))
 
