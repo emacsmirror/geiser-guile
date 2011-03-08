@@ -45,8 +45,18 @@ started."
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-init-file "~/.guile-geiser"
-  "Initialization file with user code for the Guile REPL."
+  "Initialization file with user code for the Guile REPL.
+If all you want is to load ~/.guile, set
+`geiser-guile-load-init-file-p' instead."
   :type 'string
+  :group 'geiser-guile)
+
+(geiser-custom--defcustom geiser-guile-load-init-file-p nil
+  "Whether to load ~/.guile when starting Guile.
+Note that, due to peculiarities in the way Guile loads its init
+file, using `geiser-guile-init-file' is not equivalent to setting
+this variable to t."
+  :type 'boolean
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
@@ -111,10 +121,12 @@ effect on new REPLs. For existing ones, use the command
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
-                        (expand-file-name geiser-guile-init-file))))
+                        (expand-file-name geiser-guile-init-file)))
+        (q-flags (or geiser-guile-load-init-file-p '("-q"))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-    "-q" "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
-    ,@(apply 'append (mapcar (lambda (p) (list "-L" p)) geiser-guile-load-path))
+    ,@q-flags "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+    ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
+                             geiser-guile-load-path))
     ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 ;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
