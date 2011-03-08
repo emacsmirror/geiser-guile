@@ -122,7 +122,7 @@ effect on new REPLs. For existing ones, use the command
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file)))
-        (q-flags (or geiser-guile-load-init-file-p '("-q"))))
+        (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
   `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
     ,@q-flags "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
     ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
