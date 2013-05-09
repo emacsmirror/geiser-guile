@@ -252,6 +252,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (geiser-syntax--scheme-indent
  (c-declare 0)
  (c-lambda 2)
+ (lambda* 1)
  (pmatch defun)
  (sigaction 1)
  (with-fluid* 1)
