@@ -129,8 +129,11 @@
     (rest . ,(car (cddddr arglist)))))
 
 (define (doc->args proc)
-  (define proc-rx "-- Scheme Procedure: ([^[\n]+)\n")
-  (define proc-rx2 "-- Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[^\n]+\\]+)?)")
+  ;; Guile 2.0.9+ uses the (texinfo ...) modules to produce
+  ;; `guile-procedures.txt', and the output has a single hyphen, whereas
+  ;; `makeinfo' produces two hyphens.
+  (define proc-rx "--? Scheme Procedure: ([^[\n]+)\n")
+  (define proc-rx2 "--? Scheme Procedure: ([^[\n]+\\[[^\n]*(\n[^\n]+\\]+)?)")
   (let ((doc (object-documentation proc)))
     (and doc
          (let ((match (or (string-match proc-rx doc)
