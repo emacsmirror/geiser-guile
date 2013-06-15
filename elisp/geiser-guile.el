@@ -23,6 +23,8 @@
 (require 'compile)
 (require 'info-look)
 
+(eval-when-compile (require 'cl))
+
 
 ;;; Customization:
 
