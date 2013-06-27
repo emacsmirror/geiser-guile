@@ -116,7 +116,8 @@ effect on new REPLs. For existing ones, use the command
   :type 'boolean
   :group 'geiser-guile)
 
-(geiser-custom--defcustom geiser-guile-manual-lookup-nodes '("Guile" "guile-2.0")
+(geiser-custom--defcustom geiser-guile-manual-lookup-nodes
+                          '("Guile" "guile-2.0")
   "List of info nodes that, when present, are used for manual lookups"
   :type '(repeat string)
   :group 'geiser-guile)
