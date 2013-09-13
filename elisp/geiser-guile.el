@@ -305,7 +305,7 @@ it spawn a server thread."
   (interactive)
   (geiser-connect 'guile))
 
-(defun geiser-guile--set-load-path ()
+(defun geiser-guile--set-geiser-load-path ()
   (let* ((path (expand-file-name "guile/" geiser-scheme-dir))
          (witness "geiser/emacs.scm")
          (code `(begin (if (not (%search-load-path ,witness))
@@ -318,12 +318,15 @@ it spawn a server thread."
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
          ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
   (compilation-setup t)
-  (font-lock-add-keywords nil
-                          `((,geiser-guile--path-rx 1
-                                                    compilation-error-face)))
+  (font-lock-add-keywords nil `((,geiser-guile--path-rx
+                                 1 compilation-error-face)))
   (let ((geiser-log-verbose-p t))
-    (when remote (geiser-guile--set-load-path))
+    (when remote (geiser-guile--set-geiser-load-path))
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
+    (mapcar (lambda (dir)
+              (let ((dir (expand-file-name dir)))
+                (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
+            geiser-guile-load-path)
     (geiser-guile-update-warning-level)))
 
 
