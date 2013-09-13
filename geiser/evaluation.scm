@@ -1,6 +1,6 @@
 ;;; evaluation.scm -- evaluation, compilation and macro-expansion
 
-;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -108,8 +108,15 @@
       (lambda ()
         (pretty-print (tree-il->scheme (macroexpand form)))))))
 
+(define (add-to-list lst dir)
+  (and (not (member dir lst))))
+
 (define (ge:add-to-load-path dir)
   (and (file-is-directory? dir)
-       (not (member dir %load-path))
-       (begin (set! %load-path (cons dir %load-path))
-              #t)))
+       (let ((in-lp (member dir %load-path))
+             (in-clp (member dir %load-compiled-path)))
+         (when (not in-lp)
+           (set! %load-path (cons dir %load-path)))
+         (when (not in-clp)
+           (set! %load-compiled-path (cons dir %load-compiled-path)))
+         (or in-lp in-clp))))
