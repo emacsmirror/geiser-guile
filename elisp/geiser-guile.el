@@ -323,10 +323,9 @@ it spawn a server thread."
   (let ((geiser-log-verbose-p t))
     (when remote (geiser-guile--set-geiser-load-path))
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
-    (mapcar (lambda (dir)
-              (let ((dir (expand-file-name dir)))
-                (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
-            geiser-guile-load-path)
+    (dolist (dir geiser-guile-load-path)
+      (let ((dir (expand-file-name dir)))
+        (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
     (geiser-guile-update-warning-level)))
 
 
