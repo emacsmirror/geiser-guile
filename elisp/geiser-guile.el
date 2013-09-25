@@ -289,6 +289,11 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; REPL startup
 
+(defconst geiser-guile-minimum-version "2.0")
+
+(defun geiser-guile--version (binary)
+  (shell-command-to-string (format "%s  -c '(display (version))'" binary)))
+
 (defun geiser-guile-update-warning-level ()
   "Update the warning level used by the REPL.
 The new level is set using the value of `geiser-guile-warning-level'."
@@ -364,6 +369,8 @@ it spawn a server thread."
 (define-geiser-implementation guile
   (binary geiser-guile--binary)
   (arglist geiser-guile--parameters)
+  (version-command geiser-guile--version)
+  (minimum-version geiser-guile-minimum-version)
   (repl-startup geiser-guile--startup)
   (prompt-regexp geiser-guile--prompt-regexp)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
