@@ -265,7 +265,8 @@ This function uses `geiser-guile-init-file' if it exists."
  (with-fluid* 1)
  (with-fluids 1)
  (with-fluids* 1)
- (with-method 1))
+ (with-method 1)
+ (with-mutex 1))
 
 
 
