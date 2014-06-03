@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -254,7 +254,10 @@ This function uses `geiser-guile-init-file' if it exists."
          . 1)))
    `((,(rx "(" (group "define-once") eow (* space) (? (group (+ word))))
        (1 font-lock-keyword-face)
-       (2 font-lock-variable-name-face nil t)))))
+       (2 font-lock-variable-name-face nil t))
+     ("(\\(define-module\\) +(\\([^)]+\\))"
+      (1 font-lock-keyword-face)
+      (2 font-lock-type-face nil t)))))
 
 (geiser-syntax--scheme-indent
  (c-declare 0)
