@@ -171,9 +171,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--get-module (&optional module)
   (cond ((null module)
          (save-excursion
-           (ignore-errors
-             (while (not (zerop (geiser-syntax--nesting-level)))
-               (backward-up-list)))
+           (geiser-syntax--pop-to-top)
            (if (or (re-search-backward geiser-guile--module-re nil t)
                    (looking-at geiser-guile--library-re)
                    (re-search-forward geiser-guile--module-re nil t))
