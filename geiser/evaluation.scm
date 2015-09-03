@@ -49,9 +49,10 @@
 
 (ge:set-warnings 'none)
 
-(define (write-result result output)
-  (write (list (cons 'result result) (cons 'output output)))
-  (newline))
+(define (stringify obj)
+  (object->string obj
+                  (lambda (o . ps)
+                    (pretty-print o (car ps)  #:max-expr-width 1000))))
 
 (define (call-with-result thunk)
   (letrec* ((result #f)
@@ -61,8 +62,9 @@
                  (with-fluids ((*current-warning-port* (current-output-port))
                                (*current-warning-prefix* ""))
                    (with-error-to-port (current-output-port)
-                     (lambda () (set! result (thunk)))))))))
-    (write-result result output)))
+                     (lambda () (set! result (map stringify (thunk))))))))))
+    (write `((result ,@result) (output . ,output)))
+    (newline)))
 
 (define (ge:compile form module)
   (compile* form module compile-opts))
@@ -79,7 +81,7 @@
                             (thunk (make-program o)))
                        (start-stack 'geiser-evaluation-stack
                                     (eval `(,thunk) module))))
-                 (lambda vs (map object->string vs))))))
+                 (lambda vs vs)))))
     (call-with-result ev)))
 
 (define (ge:eval form module-name)
@@ -87,7 +89,7 @@
          (ev (lambda ()
                (call-with-values
                    (lambda () (eval form module))
-                 (lambda vs (map object->string vs))))))
+                 (lambda vs vs)))))
     (call-with-result ev)))
 
 (define (ge:compile-file path)
