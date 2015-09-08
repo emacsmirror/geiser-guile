@@ -52,7 +52,7 @@
 (define (stringify obj)
   (object->string obj
                   (lambda (o . ps)
-                    (pretty-print o (car ps)  #:max-expr-width 1000))))
+                    (pretty-print o (car ps)  #:max-expr-width 100))))
 
 (define (call-with-result thunk)
   (letrec* ((result #f)
