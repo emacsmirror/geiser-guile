@@ -49,11 +49,6 @@
 
 (ge:set-warnings 'none)
 
-(define (stringify obj)
-  (object->string obj
-                  (lambda (o . ps)
-                    (pretty-print o (car ps)  #:max-expr-width 100))))
-
 (define (call-with-result thunk)
   (letrec* ((result #f)
             (output
@@ -62,7 +57,8 @@
                  (with-fluids ((*current-warning-port* (current-output-port))
                                (*current-warning-prefix* ""))
                    (with-error-to-port (current-output-port)
-                     (lambda () (set! result (map stringify (thunk))))))))))
+                     (lambda () (set! result
+                                  (map object->string (thunk))))))))))
     (write `((result ,@result) (output . ,output)))
     (newline)))
 
