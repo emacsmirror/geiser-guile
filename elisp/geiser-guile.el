@@ -245,9 +245,32 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Keywords and syntax
 
+(defconst geiser-guile--builtin-keywords
+  '("call-with-input-file"
+    "call-with-output-file"
+    "call-with-input-string"
+    "call-with-output-string"
+    "define-accessor"
+    "define-class"
+    "define-enumeration"
+    "define-inlinable"
+    "lambda*"
+    "use-modules"
+    "with-error-to-file"
+    "with-error-to-port"
+    "with-error-to-string"
+    "with-fluid*"
+    "with-fluids"
+    "with-fluids*"
+    "with-input-from-port"
+    "with-input-from-string"
+    "with-output-to-port"
+    "with-output-to-string"))
+
 (defun geiser-guile--keywords ()
   (append
    (geiser-syntax--simple-keywords geiser-guile-extra-keywords)
+   (geiser-syntax--simple-keywords geiser-guile--builtin-keywords)
    `((,(rx "(" (group "define-once") eow (* space) (? (group (+ word))))
        (1 font-lock-keyword-face)
        (2 font-lock-variable-name-face nil t))
