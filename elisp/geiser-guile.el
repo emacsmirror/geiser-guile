@@ -281,14 +281,21 @@ This function uses `geiser-guile-init-file' if it exists."
 (geiser-syntax--scheme-indent
  (c-declare 0)
  (c-lambda 2)
+ (call-with-input-string 1)
+ (call-with-output-string 0)
  (lambda* 1)
  (pmatch defun)
  (sigaction 1)
+ (with-error-to-file 1)
+ (with-error-to-port 1)
+ (with-error-to-string 0)
  (with-fluid* 1)
  (with-fluids 1)
  (with-fluids* 1)
+ (with-input-from-string 1)
  (with-method 1)
- (with-mutex 1))
+ (with-mutex 1)
+ (with-output-to-string 0))
 
 
 
