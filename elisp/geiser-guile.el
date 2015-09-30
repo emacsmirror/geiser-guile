@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -204,7 +204,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (if module
       (max (save-excursion (beginning-of-line) (point))
            (save-excursion (skip-syntax-backward "^(>") (1- (point))))
-    (save-excursion (skip-syntax-backward "^-()>") (point))))
+    (save-excursion (skip-syntax-backward "^'-()>") (point))))
 
 
 ;;; Error display
