@@ -247,14 +247,19 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile--builtin-keywords
   '("call-with-input-file"
-    "call-with-output-file"
     "call-with-input-string"
+    "call-with-output-file"
     "call-with-output-string"
+    "call-with-prompt"
+    "call-with-trace"
     "define-accessor"
     "define-class"
     "define-enumeration"
     "define-inlinable"
+    "define-syntax-parameter"
+    "eval-when"
     "lambda*"
+    "syntax-parameterize"
     "use-modules"
     "with-error-to-file"
     "with-error-to-port"
@@ -283,9 +288,13 @@ This function uses `geiser-guile-init-file' if it exists."
  (c-lambda 2)
  (call-with-input-string 1)
  (call-with-output-string 0)
+ (call-with-prompt 1)
+ (call-with-trace 0)
+ (eval-when 1)
  (lambda* 1)
  (pmatch defun)
  (sigaction 1)
+ (syntax-parameterize 1)
  (with-error-to-file 1)
  (with-error-to-port 1)
  (with-error-to-string 0)
@@ -295,8 +304,8 @@ This function uses `geiser-guile-init-file' if it exists."
  (with-input-from-string 1)
  (with-method 1)
  (with-mutex 1)
- (with-output-to-string 0))
-
+ (with-output-to-string 0)
+ (with-throw-handler 1))
 
 
 ;;; Compilation shell regexps
