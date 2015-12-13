@@ -1,6 +1,6 @@
 ;;; evaluation.scm -- evaluation, compilation and macro-expansion
 
-;; Copyright (C) 2009, 2010, 2011, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2013, 2015 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -9,22 +9,42 @@
 
 ;; Start date: Mon Mar 02, 2009 02:46
 
-(define-module (geiser evaluation)
-  #:export (ge:compile
-            ge:eval
-            ge:macroexpand
-            ge:compile-file
-            ge:load-file
-            ge:set-warnings
-            ge:add-to-load-path)
-  #:use-module (geiser modules)
-  #:use-module (srfi srfi-1)
-  #:use-module (language tree-il)
-  #:use-module (system base compile)
-  #:use-module (system base message)
-  #:use-module (system base pmatch)
-  #:use-module (system vm program)
-  #:use-module (ice-9 pretty-print))
+(cond-expand
+  (guile-2.2
+   (define-module (geiser evaluation)
+     #:export (ge:compile
+               ge:eval
+               ge:macroexpand
+               ge:compile-file
+               ge:load-file
+               ge:set-warnings
+               ge:add-to-load-path)
+     #:use-module (geiser modules)
+     #:use-module (srfi srfi-1)
+     #:use-module (language tree-il)
+     #:use-module (system base compile)
+     #:use-module (system base message)
+     #:use-module (system base pmatch)
+     #:use-module (system vm program)
+     #:use-module (ice-9 pretty-print)
+     #:use-module (system vm loader)))
+  (else
+   (define-module (geiser evaluation)
+     #:export (ge:compile
+               ge:eval
+               ge:macroexpand
+               ge:compile-file
+               ge:load-file
+               ge:set-warnings
+               ge:add-to-load-path)
+     #:use-module (geiser modules)
+     #:use-module (srfi srfi-1)
+     #:use-module (language tree-il)
+     #:use-module (system base compile)
+     #:use-module (system base message)
+     #:use-module (system base pmatch)
+     #:use-module (system vm program)
+     #:use-module (ice-9 pretty-print))))
 
 
 (define compile-opts '())
@@ -70,11 +90,15 @@
          (ev (lambda ()
                (call-with-values
                    (lambda ()
-                     (let* ((o (compile form
-                                        #:to 'objcode
+                     (let* ((to (cond-expand (guile-2.2 'bytecode)
+                                             (else 'objcode)))
+                            (cf (cond-expand (guile-2.2 load-thunk-from-memory)
+                                             (else make-program)))
+                            (o (compile form
+                                        #:to (if bytcode? 'bytecode 'objcode)
                                         #:env module
                                         #:opts opts))
-                            (thunk (make-program o)))
+                            (thunk (cf o)))
                        (start-stack 'geiser-evaluation-stack
                                     (eval `(,thunk) module))))
                  (lambda vs vs)))))
