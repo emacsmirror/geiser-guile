@@ -95,7 +95,7 @@
                             (cf (cond-expand (guile-2.2 load-thunk-from-memory)
                                              (else make-program)))
                             (o (compile form
-                                        #:to (if bytcode? 'bytecode 'objcode)
+                                        #:to to
                                         #:env module
                                         #:opts opts))
                             (thunk (cf o)))
