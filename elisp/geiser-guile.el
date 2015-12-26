@@ -336,7 +336,9 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--version (binary)
   (shell-command-to-string
-   (format "%s  -c %s" binary (shell-quote-argument "(display (version))"))))
+   (format "%s  -c %s"
+           (shell-quote-argument binary)
+           (shell-quote-argument "(display (version))"))))
 
 (defun geiser-guile-update-warning-level ()
   "Update the warning level used by the REPL.
