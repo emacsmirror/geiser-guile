@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -224,11 +224,10 @@ This function uses `geiser-guile-init-file' if it exists."
       (ignore-errors (next-error)))))
 
 (defun geiser-guile--display-error (module key msg)
-  (newline)
   (when (stringp msg)
     (save-excursion (insert msg))
     (geiser-edit--buttonize-files))
-  (and (not key) msg (not (zerop (length msg)))))
+  (and (not key) (not (zerop (length msg))) msg))
 
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
