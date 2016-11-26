@@ -158,7 +158,8 @@ This function uses `geiser-guile-init-file' if it exists."
                             (or (car args) "#f")
                             (geiser-guile--linearize-args (cdr args))
                             (if (cddr args) "" " ()")))
-    ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
+    ((load-file compile-file)
+     (format ",geiser-load-file %s" (expand-file-name (car args))))
     ((no-values) ",geiser-no-values")
     (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
 
