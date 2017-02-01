@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2017 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -41,8 +41,10 @@
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-load-path nil
-  "A list of paths to be added to Guile's load path when it's
-started."
+  "A list of paths to be added to Guile's load path when it's started.
+The paths are added to both %load-path and %load-compiled path,
+and only if they are not already present.  This variable is a
+good candidate for an entry in your project's .dir-locals.el."
   :type '(repeat file)
   :group 'geiser-guile)
 
