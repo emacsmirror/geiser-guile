@@ -1,6 +1,7 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
 ;; Copyright (C) 2009-2017 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -401,11 +402,10 @@ it spawn a server thread."
 (defun guile--manual-look-up (id mod)
   (let ((info-lookup-other-window-flag
          geiser-guile-manual-lookup-other-window-p))
-    (info-lookup-symbol id 'geiser-guile-mode))
+    (info-lookup-symbol (symbol-name id) 'scheme-mode))
   (when geiser-guile-manual-lookup-other-window-p
     (switch-to-buffer-other-window "*info*"))
   (search-forward (format "%s" id) nil t))
-
 
 
 ;;; Implementation definition:
