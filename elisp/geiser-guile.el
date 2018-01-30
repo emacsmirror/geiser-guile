@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009-2017 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2018 Jose Antonio Ortega Ruiz
 ;; Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
 
 ;; This program is free software; you can redistribute it and/or
@@ -334,7 +334,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; REPL startup
 
-(defconst geiser-guile-minimum-version "2.0")
+(defconst geiser-guile-minimum-version "2.2")
 
 (defun geiser-guile--version (binary)
   (car (process-lines binary "-c" "(display (version))")))
