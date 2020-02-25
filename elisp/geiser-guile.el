@@ -35,9 +35,9 @@
   :group 'geiser)
 
 (geiser-custom--defcustom geiser-guile-binary
-  (cond ((eq system-type 'windows-nt) "guile.exe")
-        ((eq system-type 'darwin) "guile")
-        (t "guile"))
+    (cond ((eq system-type 'windows-nt) "guile.exe")
+          ((eq system-type 'darwin) "guile")
+          (t "guile"))
   "Name to use to call the Guile executable when starting a REPL."
   :type '(choice string (repeat string))
   :group 'geiser-guile)
@@ -121,7 +121,7 @@ effect on new REPLs. For existing ones, use the command
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-nodes
-                          '("Guile" "guile-2.0")
+    '("Guile" "guile-2.0")
   "List of info nodes that, when present, are used for manual lookups"
   :type '(repeat string)
   :group 'geiser-guile)
@@ -140,11 +140,11 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file)))
         (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
-  `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-    ,@q-flags "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
-    ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
-                             geiser-guile-load-path))
-    ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
+    `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
+      ,@q-flags "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+      ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
+                               geiser-guile-load-path))
+      ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
 ;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
 (defconst geiser-guile--prompt-regexp "[^@()]+@([^)]*?)> ")
@@ -280,8 +280,8 @@ This function uses `geiser-guile-init-file' if it exists."
    (geiser-syntax--simple-keywords geiser-guile-extra-keywords)
    (geiser-syntax--simple-keywords geiser-guile--builtin-keywords)
    `((,(rx "(" (group "define-once") eow (* space) (? (group (+ word))))
-       (1 font-lock-keyword-face)
-       (2 font-lock-variable-name-face nil t))
+      (1 font-lock-keyword-face)
+      (2 font-lock-variable-name-face nil t))
      ("(\\(define-module\\) +(\\([^)]+\\))"
       (1 font-lock-keyword-face)
       (2 font-lock-type-face nil t)))))
@@ -386,7 +386,7 @@ it spawn a server thread."
 ;;; Manual lookup
 
 (defun geiser-guile--info-spec (&optional nodes)
-  (let* ((nrx "^[ 	]+-+ [^:]+:[ 	]*")
+  (let* ((nrx "^[       ]+-+ [^:]+:[    ]*")
          (drx "\\b")
          (res (when (Info-find-file "r5rs" t)
                 `(("(r5rs)Index" nil ,nrx ,drx)))))
@@ -400,7 +400,7 @@ it spawn a server thread."
 
 (info-lookup-add-help :topic 'symbol :mode 'geiser-guile-mode
                       :ignore-case nil
-                      :regexp "[^()`',\" 	\n]+"
+                      :regexp "[^()`',\"        \n]+"
                       :doc-spec (geiser-guile--info-spec))
 
 (defun guile--manual-look-up (id mod)
