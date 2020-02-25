@@ -1,4 +1,4 @@
-;; geiser-guile.el -- guile's implementation of the geiser protocols
+;;; geiser-guile.el -- guile's implementation of the geiser protocols
 
 ;; Copyright (C) 2009-2018, 2020 Jose Antonio Ortega Ruiz
 ;; Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
