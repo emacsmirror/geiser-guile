@@ -25,7 +25,7 @@
 (require 'compile)
 (require 'info-look)
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 
 ;;; Customization:
@@ -157,7 +157,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (mapconcat 'identity args " "))
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
-  (case proc
+  (cl-case proc
     ((eval compile) (format ",geiser-eval %s %s%s"
                             (or (car args) "#f")
                             (geiser-guile--linearize-args (cdr args))
