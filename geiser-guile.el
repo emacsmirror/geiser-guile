@@ -1,14 +1,21 @@
 ;;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009-2018, 2020 Jose Antonio Ortega Ruiz
-;; Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
-
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the Modified BSD License. You should
-;; have received a copy of the license along with this program. If
-;; not, see <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5>.
-
+;; Copyright (C) 2009-2020 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
+
+;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
+;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
+;; Keywords: languages, guile, scheme, geiser
+;; Homepage: https://gitlab.com/emacs-geiser/guile
+;; Package-Requires: ((emacs "24.4") (geiser-core "1.0"))
+;; SPDX-License-Identifier: BSD-3-Clause
+;; Version: 1.0
+
+;; This file is NOT part of GNU Emacs.
+
+;;; Commentary:
+;; geiser-guile extends the `geiser' core package to support GNU
+;; Guile.
 
 
 ;;; Code:
@@ -134,6 +141,10 @@ effect on new REPLs. For existing ones, use the command
       (car geiser-guile-binary)
     geiser-guile-binary))
 
+(defvar geiser-guile-scheme-dir
+  (expand-file-name "src" (file-name-nondirectory load-file-name))
+  "Directory where the Guile scheme geiser modules are installed.")
+
 (defun geiser-guile--parameters ()
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
@@ -141,7 +152,7 @@ This function uses `geiser-guile-init-file' if it exists."
                         (expand-file-name geiser-guile-init-file)))
         (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
     `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-      ,@q-flags "-L" ,(expand-file-name "guile/" geiser-scheme-dir)
+      ,@q-flags "-L" ,geiser-guile-scheme-dir
       ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
                                geiser-guile-load-path))
       ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
@@ -357,7 +368,7 @@ it spawn a server thread."
   (geiser-connect 'guile))
 
 (defun geiser-guile--set-geiser-load-path ()
-  (let* ((path (expand-file-name "guile/" geiser-scheme-dir))
+  (let* ((path geiser-guile-scheme-dir)
          (witness "geiser/emacs.scm")
          (code `(begin (if (not (%search-load-path ,witness))
                            (set! %load-path (cons ,path %load-path)))
