@@ -142,7 +142,7 @@ effect on new REPLs. For existing ones, use the command
     geiser-guile-binary))
 
 (defvar geiser-guile-scheme-dir
-  (expand-file-name "src" (file-name-nondirectory load-file-name))
+  (expand-file-name "src" (file-name-directory load-file-name))
   "Directory where the Guile scheme geiser modules are installed.")
 
 (defun geiser-guile--parameters ()
