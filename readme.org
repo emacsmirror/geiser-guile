@@ -1,0 +1,10 @@
+* Guile and Geiser talk to each other
+
+This package provides support for using [[https://www.gnu.org/software/guile/][GNU Guile]] in Emacs with
+[[http://geiser.nongnu.org][Geiser]].
+
+Provided [[https://gitlab.com/emacs-geiser/core][geiser-core]] is installed in your system, if this package's
+directory is in your load path, just add ~(require 'geiser-guile)~ to
+your initialisation files and then ~M-x run-guile~ to start a REPL.
+Scheme files with a Guile module declaration should be automatically
+recognised as Guile-flavoured Geiser buffers.
