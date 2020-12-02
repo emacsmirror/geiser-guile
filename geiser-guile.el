@@ -188,8 +188,9 @@ This function uses `geiser-guile-init-file' if it exists."
          (save-excursion
            (geiser-syntax--pop-to-top)
            (if (or (re-search-backward geiser-guile--module-re nil t)
-                   (looking-at geiser-guile--library-re)
-                   (re-search-forward geiser-guile--module-re nil t))
+                   (re-search-backward geiser-guile--library-re nil t)
+                   (re-search-forward geiser-guile--module-re nil t)
+                   (re-search-forward geiser-guile--library-re nil t))
                (geiser-guile--get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
