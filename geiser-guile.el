@@ -1,20 +1,21 @@
-;;; geiser-guile.el -- guile's implementation of the geiser protocols
+;;; geiser-guile.el --- Guile's implementation of the geiser protocols  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2020 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2021 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, guile, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
-;; Package-Requires: ((emacs "24.4") (geiser-core "1.0"))
+;; Package-Requires: ((emacs "24.4") (geiser "0.12"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 1.0
+;; Version: 0.13
 
 ;; This file is NOT part of GNU Emacs.
 
 ;;; Commentary:
-;; geiser-guile extends the `geiser' core package to support GNU
+
+;; This package extends the `geiser' core package to support GNU
 ;; Guile.
 
 
@@ -51,7 +52,7 @@
 
 (geiser-custom--defcustom geiser-guile-load-path nil
   "A list of paths to be added to Guile's load path when it's started.
-The paths are added to both %load-path and %load-compiled path,
+The paths are added to both %`load-path' and %load-compiled path,
 and only if they are not already present.  This variable is a
 good candidate for an entry in your project's .dir-locals.el."
   :type '(repeat file)
@@ -74,13 +75,13 @@ this variable to t."
 
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
   "Whether to automatically show a full backtrace when entering the debugger.
-If `nil', only the last frame is shown."
+If nil, only the last frame is shown."
   :type 'boolean
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-jump-on-debug-p nil
   "Whether to automatically jump to error when entering the debugger.
-If `t', Geiser will use `next-error' to jump to the error's location."
+If t, Geiser will use `next-error' to jump to the error's location."
   :type 'boolean
   :group 'geiser-guile)
 
@@ -93,9 +94,9 @@ If `t', Geiser will use `next-error' to jump to the error's location."
   "Verbosity of the warnings reported by Guile.
 
 You can either choose one of the predefined warning sets, or
-provide a list of symbols identifying the ones you want. Possible
+provide a list of symbols identifying the ones you want.  Possible
 choices are arity-mismatch, unbound-variable, unused-variable and
-unused-toplevel. Unrecognised symbols are ignored.
+unused-toplevel.  Unrecognised symbols are ignored.
 
 The predefined levels are:
 
@@ -104,7 +105,7 @@ The predefined levels are:
   - None: no warnings
 
 Changes to the value of this variable will automatically take
-effect on new REPLs. For existing ones, use the command
+effect on new REPLs.  For existing ones, use the command
 \\[geiser-guile-update-warning-level]."
   :type '(choice (const :tag "Medium (arity and unbound vars)" medium)
                  (const :tag "High (also unused vars)" high)
@@ -129,7 +130,7 @@ effect on new REPLs. For existing ones, use the command
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-nodes
     '("Guile" "guile-2.0")
-  "List of info nodes that, when present, are used for manual lookups"
+  "List of info nodes that, when present, are used for manual lookups."
   :type '(repeat string)
   :group 'geiser-guile)
 
@@ -137,6 +138,7 @@ effect on new REPLs. For existing ones, use the command
 ;;; REPL support:
 
 (defun geiser-guile--binary ()
+  "Return the name of the Guile binary to execute."
   (if (listp geiser-guile-binary)
       (car geiser-guile-binary)
     geiser-guile-binary))
@@ -165,9 +167,11 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Evaluation support:
 (defsubst geiser-guile--linearize-args (args)
+  "Concatenate the list ARGS."
   (mapconcat 'identity args " "))
 
 (defun geiser-guile--geiser-procedure (proc &rest args)
+  "Transform PROC in string for a scheme procedure using ARGS."
   (cl-case proc
     ((eval compile) (format ",geiser-eval %s %s%s"
                             (or (car args) "#f")
@@ -184,6 +188,7 @@ This function uses `geiser-guile-init-file' if it exists."
   "(library +\\(([^)]+)\\)")
 
 (defun geiser-guile--get-module (&optional module)
+  "Find current buffer's module using MODULE as a hint."
   (cond ((null module)
          (save-excursion
            (geiser-syntax--pop-to-top)
@@ -201,6 +206,7 @@ This function uses `geiser-guile-init-file' if it exists."
         (t :f)))
 
 (defun geiser-guile--module-cmd (module fmt &optional def)
+  "Use FMT to format a change to MODULE, with default DEF."
   (when module
     (let* ((module (geiser-guile--get-module module))
            (module (cond ((or (null module) (eq module :f)) def)
@@ -208,15 +214,20 @@ This function uses `geiser-guile-init-file' if it exists."
       (and module (format fmt module)))))
 
 (defun geiser-guile--import-command (module)
+  "Format a REPL command to use MODULE."
   (geiser-guile--module-cmd module ",use %s"))
 
 (defun geiser-guile--enter-command (module)
+  "Format a REPL command to enter MODULE."
   (geiser-guile--module-cmd module ",m %s" "(guile-user)"))
 
 
-(defun geiser-guile--exit-command () ",q")
+(defun geiser-guile--exit-command ()
+  "Format a REPL command to quit."
+  ",q")
 
 (defun geiser-guile--symbol-begin (module)
+  "Find beginning of symbol in the context of MODULE."
   (if module
       (max (save-excursion (beginning-of-line) (point))
            (save-excursion (skip-syntax-backward "^(>") (1- (point))))
@@ -226,6 +237,7 @@ This function uses `geiser-guile-init-file' if it exists."
 ;;; Error display
 
 (defun geiser-guile--enter-debugger ()
+  "Tell Geiser to interact with the debugger."
   (let ((bt-cmd (format ",geiser-newline\n,error-message\n,%s\n"
                         (if geiser-guile-debug-show-bt-p "bt" "fr"))))
     (compilation-forget-errors)
@@ -239,7 +251,8 @@ This function uses `geiser-guile-init-file' if it exists."
                              0.2 nil t)
       (ignore-errors (next-error)))))
 
-(defun geiser-guile--display-error (module key msg)
+(defun geiser-guile--display-error (_module key msg)
+  "Display error with given KEY and message MSG."
   (when (stringp msg)
     (save-excursion (insert msg))
     (geiser-edit--buttonize-files))
@@ -253,6 +266,7 @@ This function uses `geiser-guile-init-file' if it exists."
           geiser-guile--module-re))
 
 (defun geiser-guile--guess ()
+  "Ascertain whether we are in a Guile file."
   (save-excursion
     (goto-char (point-min))
     (re-search-forward geiser-guile--guess-re nil t)))
@@ -288,6 +302,7 @@ This function uses `geiser-guile-init-file' if it exists."
     "with-output-to-string"))
 
 (defun geiser-guile--keywords ()
+  "Return Guile-specific scheme keywords."
   (append
    (geiser-syntax--simple-keywords geiser-guile-extra-keywords)
    (geiser-syntax--simple-keywords geiser-guile--builtin-keywords)
@@ -329,9 +344,11 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile--rel-path-rx "^In +\\([^/\n :]+\\):\n")
 
-(defvar geiser-guile--file-cache (make-hash-table :test 'equal))
+(defvar geiser-guile--file-cache (make-hash-table :test 'equal)
+  "Internal cache.")
 
 (defun geiser-guile--resolve-file (file)
+  "Find the given FILE, if it's indeed a file."
   (when (and (stringp file)
              (not (member file '("socket" "stdin" "unknown file"))))
     (if (file-name-absolute-p file) file
@@ -341,6 +358,7 @@ This function uses `geiser-guile-init-file' if it exists."
                    geiser-guile--file-cache)))))
 
 (defun geiser-guile--resolve-file-x ()
+  "Check if last match contain a resolvable file."
   (let ((f (geiser-guile--resolve-file (match-string-no-properties 1))))
     (and (stringp f) (list f))))
 
@@ -350,6 +368,7 @@ This function uses `geiser-guile-init-file' if it exists."
 (defconst geiser-guile-minimum-version "2.2")
 
 (defun geiser-guile--version (binary)
+  "Find Guile's version running BINARY."
   (car (process-lines binary "-c" "(display (version))")))
 
 (defun geiser-guile-update-warning-level ()
@@ -360,6 +379,7 @@ The new level is set using the value of `geiser-guile-warning-level'."
                       (geiser evaluation))))
     (geiser-eval--send/result code)))
 
+;;;###autoload
 (defun connect-to-guile ()
   "Start a Guile REPL connected to a remote process.
 
@@ -369,6 +389,7 @@ it spawn a server thread."
   (geiser-connect 'guile))
 
 (defun geiser-guile--set-geiser-load-path ()
+  "Set up scheme load path for REPL."
   (let* ((path geiser-guile-scheme-dir)
          (witness "geiser/emacs.scm")
          (code `(begin (if (not (%search-load-path ,witness))
@@ -377,6 +398,7 @@ it spawn a server thread."
     (geiser-eval--send/wait code)))
 
 (defun geiser-guile--startup (remote)
+  "Startup function, for a remote connection if REMOTE is t."
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
          ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
@@ -398,6 +420,7 @@ it spawn a server thread."
 ;;; Manual lookup
 
 (defun geiser-guile--info-spec (&optional nodes)
+  "Return info specification for given NODES."
   (let* ((nrx "^[       ]+-+ [^:]+:[    ]*")
          (drx "\\b")
          (res (when (Info-find-file "r5rs" t)
@@ -415,7 +438,8 @@ it spawn a server thread."
                       :regexp "[^()`',\"        \n]+"
                       :doc-spec (geiser-guile--info-spec))
 
-(defun guile--manual-look-up (id mod)
+(defun geiser-guile--manual-look-up (id _mod)
+  "Look for ID in the Guile manuals."
   (let ((info-lookup-other-window-flag
          geiser-guile-manual-lookup-other-window-p))
     (info-lookup-symbol (symbol-name id) 'geiser-guile-mode))
@@ -442,12 +466,19 @@ it spawn a server thread."
   (import-command geiser-guile--import-command)
   (find-symbol-begin geiser-guile--symbol-begin)
   (display-error geiser-guile--display-error)
-  (external-help guile--manual-look-up)
+  (external-help geiser-guile--manual-look-up)
   (check-buffer geiser-guile--guess)
   (keywords geiser-guile--keywords)
   (case-sensitive geiser-guile-case-sensitive-p))
 
 (geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile t)
 
-
+;;;###autoload
+(autoload 'run-guile "geiser-guile" "Start a Geiser Guile REPL." t)
+
+;;;###autoload
+(autoload 'switch-to-guile "geiser-guile"
+  "Start a Geiser Guile REPL, or switch to a running one." t)
+
 (provide 'geiser-guile)
+;;; geiser-guile.el ends here
