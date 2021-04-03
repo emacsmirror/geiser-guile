@@ -24,6 +24,7 @@
 (require 'geiser-connection)
 (require 'geiser-syntax)
 (require 'geiser-custom)
+(require 'geiser-repl)
 (require 'geiser-base)
 (require 'geiser-eval)
 (require 'geiser-edit)
