@@ -25,6 +25,7 @@
 (require 'geiser-syntax)
 (require 'geiser-custom)
 (require 'geiser-repl)
+(require 'geiser-impl)
 (require 'geiser-base)
 (require 'geiser-eval)
 (require 'geiser-edit)
@@ -473,6 +474,9 @@ it spawn a server thread."
   (case-sensitive geiser-guile-case-sensitive-p))
 
 (geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile t)
+
+;;;###autoload
+(geiser-activate-implementation 'guile)
 
 ;;;###autoload
 (autoload 'run-guile "geiser-guile" "Start a Geiser Guile REPL." t)
