@@ -7,9 +7,9 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, guile, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
-;; Package-Requires: ((emacs "24.4") (geiser "0.12"))
+;; Package-Requires: ((emacs "24.4") (geiser "0.16"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.13
+;; Version: 0.16
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -473,7 +473,7 @@ it spawn a server thread."
   (keywords geiser-guile--keywords)
   (case-sensitive geiser-guile-case-sensitive-p))
 
-(geiser-impl--add-to-alist 'regexp "\\.scm$" 'guile t)
+(geiser-implementation-extension 'guile "scm")
 
 ;;;###autoload
 (geiser-activate-implementation 'guile)
