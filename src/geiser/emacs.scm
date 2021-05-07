@@ -35,11 +35,12 @@ Meta-command used by Geiser to emit a new line."
 (define-meta-command ((geiser-eval geiser) repl (mod form args) . rest)
   "geiser-eval module form args ()
 Meta-command used by Geiser to evaluate and compile code."
-  (if (null? args)
-      (call-with-error-handling
-       (lambda () (ge:compile form mod)))
-      (let ((proc (eval form this-module)))
-        (ge:eval `(,proc ,@args) mod))))
+  (let ((args (syntax->datum args)))
+    (if (null? args)
+	(call-with-error-handling
+	 (lambda () (ge:compile form mod)))
+	(let ((proc (eval form this-module)))
+          (ge:eval `(,proc ,@args) mod)))))
 
 (define-meta-command ((geiser-load-file geiser) repl file)
   "geiser-load-file file
