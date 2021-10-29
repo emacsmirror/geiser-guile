@@ -9,7 +9,7 @@
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
 ;; Package-Requires: ((emacs "24.4") (geiser "0.16"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.17
+;; Version: 0.18
 
 ;; This file is NOT part of GNU Emacs.
 
