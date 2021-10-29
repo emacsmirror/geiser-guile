@@ -35,7 +35,8 @@ Meta-command used by Geiser to emit a new line."
 (define-meta-command ((geiser-eval geiser) repl (mod form args) . rest)
   "geiser-eval module form args ()
 Meta-command used by Geiser to evaluate and compile code."
-  (let ((args (syntax->datum args)))
+  (let ((args (syntax->datum args))
+        (mod (syntax->datum mod)))
     (if (null? args)
 	(call-with-error-handling
 	 (lambda () (ge:compile form mod)))
