@@ -7,7 +7,7 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, guile, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
-;; Package-Requires: ((emacs "24.4") (geiser "0.16"))
+;; Package-Requires: ((emacs "24.4") (geiser "0.18"))
 ;; SPDX-License-Identifier: BSD-3-Clause
 ;; Version: 0.18
 
@@ -251,7 +251,8 @@ This function uses `geiser-guile-init-file' if it exists."
     (when geiser-guile-jump-on-debug-p
       (accept-process-output (get-buffer-process (current-buffer))
                              0.2 nil t)
-      (ignore-errors (next-error)))))
+      (ignore-errors (next-error)))
+    t))
 
 (defun geiser-guile--display-error (_module key msg)
   "Display error with given KEY and message MSG."
