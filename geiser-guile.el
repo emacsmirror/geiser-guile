@@ -49,48 +49,41 @@
           ((eq system-type 'darwin) "guile")
           (t "guile"))
   "Name to use to call the Guile executable when starting a REPL."
-  :type '(choice string (repeat string))
-  :group 'geiser-guile)
+  :type '(choice string (repeat string)))
 
 (geiser-custom--defcustom geiser-guile-load-path nil
   "A list of paths to be added to Guile's load path when it's started.
 The paths are added to both %`load-path' and %load-compiled path,
 and only if they are not already present.  This variable is a
 good candidate for an entry in your project's .dir-locals.el."
-  :type '(repeat file)
-  :group 'geiser-guile)
+  :type '(repeat file))
 
 (geiser-custom--defcustom geiser-guile-init-file "~/.guile-geiser"
   "Initialization file with user code for the Guile REPL.
 If all you want is to load ~/.guile, set
 `geiser-guile-load-init-file-p' instead."
-  :type 'string
-  :group 'geiser-guile)
+  :type 'string)
 
 (geiser-custom--defcustom geiser-guile-load-init-file-p nil
   "Whether to load ~/.guile when starting Guile.
 Note that, due to peculiarities in the way Guile loads its init
 file, using `geiser-guile-init-file' is not equivalent to setting
 this variable to t."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
   "Whether to automatically show a full backtrace when entering the debugger.
 If nil, only the last frame is shown."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-jump-on-debug-p nil
   "Whether to automatically jump to error when entering the debugger.
 If t, Geiser will use `next-error' to jump to the error's location."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-show-debug-help-p t
   "Whether to show brief help in the echo area when entering the debugger."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-warning-level 'medium
   "Verbosity of the warnings reported by Guile.
@@ -112,29 +105,24 @@ effect on new REPLs.  For existing ones, use the command
   :type '(choice (const :tag "Medium (arity and unbound vars)" medium)
                  (const :tag "High (also unused vars)" high)
                  (const :tag "No warnings" none)
-                 (repeat :tag "Custom" symbol))
-  :group 'geiser-guile)
+                 (repeat :tag "Custom" symbol)))
 
 (geiser-custom--defcustom geiser-guile-extra-keywords nil
   "Extra keywords highlighted in Guile scheme buffers."
-  :type '(repeat string)
-  :group 'geiser-guile)
+  :type '(repeat string))
 
 (geiser-custom--defcustom geiser-guile-case-sensitive-p t
   "Non-nil means keyword highlighting is case-sensitive."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-other-window-p nil
   "Non-nil means pop up the Info buffer in another window."
-  :type 'boolean
-  :group 'geiser-guile)
+  :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-nodes
     '("Guile" "guile-2.0")
   "List of info nodes that, when present, are used for manual lookups."
-  :type '(repeat string)
-  :group 'geiser-guile)
+  :type '(repeat string))
 
 
 ;;; REPL support:
