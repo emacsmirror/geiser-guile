@@ -71,6 +71,13 @@ file, using `geiser-guile-init-file' is not equivalent to setting
 this variable to t."
   :type 'boolean)
 
+(geiser-custom--defcustom geiser-guile-use-declarative-modules-p nil
+  "Whether Guile should use \"declarative\" modules limiting mutability.
+When set to `t', Guile will enforce immutable bindings in
+exported modules."
+  :type 'boolean
+  :link '(info-link "(guile) Declarative Modules"))
+
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
   "Whether to automatically show a full backtrace when entering the debugger.
 If nil, only the last frame is shown."
@@ -388,6 +395,13 @@ it spawn a server thread."
                        'done)))
     (geiser-eval--send/wait code)))
 
+(defun geiser-guile--set-up-declarative-modules ()
+  "Set up Guile to (not) use declarative modules.
+See `geiser-guile-use-declarative-modules-p'."
+  (unless geiser-guile-use-declarative-modules-p
+    (let ((code '(begin (eval-when (expand) (user-modules-declarative? :f)) 'ok)))
+      (geiser-eval--send/wait code))))
+
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
   (set (make-local-variable 'compilation-error-regexp-alist)
@@ -401,6 +415,7 @@ it spawn a server thread."
                                          (or geiser-repl--last-scm-buffer
                                              (current-buffer)))))
     (when remote (geiser-guile--set-geiser-load-path))
+    (geiser-guile--set-up-declarative-modules)
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
     (dolist (dir g-load-path)
       (let ((dir (expand-file-name dir)))
