@@ -156,10 +156,9 @@ This function uses `geiser-guile-init-file' if it exists."
                                geiser-guile-load-path))
       ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
 
-;;(defconst geiser-guile--prompt-regexp "^[^() \n]+@([^)]*?)> ")
-(defconst geiser-guile--prompt-regexp "[^@()]+@([^)]*?)> ")
+(defconst geiser-guile--prompt-regexp "^[^@(\n]+@([^)]*)> ")
 (defconst geiser-guile--debugger-prompt-regexp
-  "[^@()]+@([^)]*?) \\[[0-9]+\\]> ")
+  "^[^@(\n]+@([^)]*?) \\[[0-9]+\\]> ")
 
 
 ;;; Evaluation support:
@@ -244,8 +243,7 @@ This function uses `geiser-guile-init-file' if it exists."
     (when geiser-guile-show-debug-help-p
       (message "Debug REPL. Enter ,q to quit, ,h for help."))
     (when geiser-guile-jump-on-debug-p
-      (accept-process-output (get-buffer-process (current-buffer))
-                             0.2 nil t)
+      (accept-process-output (get-buffer-process (current-buffer)) 0.2 nil t)
       (ignore-errors (next-error)))
     t))
 
@@ -406,7 +404,8 @@ See `geiser-guile-use-declarative-modules-p'."
   "Startup function, for a remote connection if REMOTE is t."
   (set (make-local-variable 'compilation-error-regexp-alist)
        `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
-         ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)))
+         ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)
+         ("^\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3)))
   (compilation-setup t)
   (font-lock-add-keywords nil `((,geiser-guile--path-rx
                                  1 compilation-error-face)))
