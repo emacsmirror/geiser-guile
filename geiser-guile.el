@@ -476,8 +476,6 @@ See `geiser-guile-use-declarative-modules-p'."
   (keywords geiser-guile--keywords)
   (case-sensitive geiser-guile-case-sensitive-p))
 
-(geiser-implementation-extension 'guile "scm")
-
 ;;;###autoload
 (geiser-activate-implementation 'guile)
 
