@@ -9,4 +9,33 @@ your initialisation files and then ~M-x run-guile~ to start a REPL.
 Scheme files with a Guile module declaration should be automatically
 recognised as Guile-flavoured Geiser buffers.
 
-The easiest way of installing this package is using MELPA.
+The easiest way of installing this package is using NonGNU Elpa or
+MELPA.  If you're in Emacs 28 or higher, the former is already enabled
+and all you need is the familiar
+
+#+begin_src elisp
+  M-x install-package RET geiser-guile RET
+#+end_src
+
+That will also install geiser, and its fine info manual.  Please refer
+to it (or its [[https://geiser.nongnu.org][online version]]) for a general description of how geiser
+schemes work.  We provide below some additional details specific to
+geiser-guile.
+
+*** Start up
+
+    When launching the Guile REPL, geiser will invoke the binary
+    configured in ~geiser-guile-binary~ (simply "guile" by default)
+    which in turn will load ~geiser-guile-init-file~, if any.
+
+    Note, however, that specifying ~geiser-guile-init-file~ is /not/
+    equivalent to changing Guile's initialization file (=~/.guile=),
+    because the former is loaded using the =-l= flag, together with =-q=
+    to disable loading the second.  But there are subtle differences
+    in the way Guile loads the initialization file versus how it loads
+    a file specified via the =-l= flag.  If what you want is just
+    loading =~/.guile=, leave ~geiser-guile-init-file~ alone and set
+    ~geiser-guile-load-init-file-p~ to ~t~ instead.
+
+    One can also provide a global list of paths to add to Guile's
+    =%load-path= via ~geiser-guile-load-path~.
