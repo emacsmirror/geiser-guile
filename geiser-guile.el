@@ -35,7 +35,8 @@
 (require 'compile)
 (require 'info-look)
 
-(eval-when-compile (require 'cl-lib))
+(eval-when-compile (require 'cl-lib)
+                   (require 'tramp))
 
 
 ;;; Customization:
@@ -143,6 +144,61 @@ effect on new REPLs.  For existing ones, use the command
   (expand-file-name "src" (file-name-directory load-file-name))
   "Directory where the Guile scheme geiser modules are installed.")
 
+(defvar-local geiser-guile-scheme-local-dir
+    nil
+  "Location for scm files to communicate using REPL that are local to process.
+
+When using Tramp buffers, the guile modules are not local. They'll be stored in
+this location for further cleanup")
+(defun geiser-guile--remote-copy (source-path target-path)
+  "Copy source-path to target-path ensuring symlinks are resolved."
+  ;; when using `straight', guile scripts that need to be evaluated will be
+  ;; symlinks
+  ;; `copy-directory' will copy broken symlinks
+  ;; so we manually copy them to avoid broken symlinks in remote host
+  (cond
+   ((file-symlink-p source-path)
+    (geiser-guile--remote-copy-ensure-no-symlinks
+     (file-truename source-path)
+     target-path))
+   ((file-directory-p source-path)
+    (unless (file-directory-p target-path) (make-directory target-path t))
+    (let ((dest (file-name-as-directory target-path)))
+      (dolist (f (seq-difference (directory-files source-path) '("." "..")))
+        (geiser-guile--remote-copy (expand-file-name f source-path)
+                                   (expand-file-name f dest)))))
+   (t
+    (cl-assert (file-regular-p source-path))
+    (copy-file source-path target-path))))
+
+(defun geiser-guile-ensure-scheme-dir ()
+  "\(Maybe setup and \) return dir for Guile scheme geiser modules.
+
+If using a remote Tramp buffer, this function will copy the modules to a
+temporary location in the remote server and the return it.
+Else, will just return `geiser-guile-scheme-dir'."
+  (cond ((not (tramp-tramp-file-p default-directory)) geiser-guile-scheme-dir)
+        (geiser-guile-scheme-local-dir) ;; remote files are already there
+        (t
+         (let* ((temporary-file-directory (temporary-file-directory))
+                (remote-temp-dir
+                 (make-temp-file "emacs-geiser-guile" t)))
+           (message "Setting up Tramp Guile REPL...")
+           (let ((inhibit-message t)) ;; prevent "Copying … to … " from dired
+             (geiser-guile--remote-copy
+              geiser-guile-scheme-dir
+              (concat
+               (file-name-as-directory remote-temp-dir)
+               (file-name-nondirectory
+                (directory-file-name geiser-guile-scheme-dir)))))
+           ;; return the directory name as local to (remote) process
+           (setq geiser-guile-scheme-local-dir
+                 (concat
+                  (file-name-as-directory
+                   (file-local-name
+                    remote-temp-dir))
+                  (file-name-nondirectory geiser-guile-scheme-dir)))))))
+
 (defvar geiser-guile--conn-address nil)
 
 (defun geiser-guile--get-connection-address (&optional new)
@@ -156,16 +212,20 @@ Unused for now."
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
-                        (expand-file-name geiser-guile-init-file)))
+                        (expand-file-name
+                         (concat
+                          (file-remote-p default-directory)
+                          geiser-guile-init-file))))
         (c-flags (when geiser-guile--conn-address
                    `(,(format "--listen=%s"
                               (geiser-guile--get-connection-address t)))))
         (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
     `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-      ,@q-flags "-L" ,geiser-guile-scheme-dir ,@c-flags
+      ,@q-flags "-L" ,(geiser-guile-ensure-scheme-dir) ,@c-flags
       ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
                                geiser-guile-load-path))
-      ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
+      ,@(and init-file (file-readable-p init-file)
+             (list "-l" (file-local-name init-file))))))
 
 (defconst geiser-guile--prompt-regexp "^[^@(\n]+@([^)]*)> ")
 (defconst geiser-guile--debugger-prompt-regexp
@@ -401,7 +461,11 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--version (binary)
   "Find Guile's version running BINARY."
-  (car (process-lines binary "-c" "(display (version))")))
+  ;; maybe one day we'll have `process-lines' with tramp support
+  (shell-command-to-string
+   (format "%s -c %s"
+           (geiser-guile--binary)
+           (shell-quote-argument "(display (version))"))))
 
 (defun geiser-guile-update-warning-level ()
   "Update the warning level used by the REPL.
@@ -422,7 +486,7 @@ it spawn a server thread."
 
 (defun geiser-guile--set-geiser-load-path ()
   "Set up scheme load path for REPL."
-  (let* ((path geiser-guile-scheme-dir)
+  (let* ((path (geiser-guile-ensure-scheme-dir))
          (witness "geiser/emacs.scm")
          (code `(begin (if (not (%search-load-path ,witness))
                            (set! %load-path (cons ,path %load-path)))
