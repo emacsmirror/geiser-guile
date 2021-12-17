@@ -78,7 +78,7 @@ exported modules."
   :type 'boolean
   :link '(info-link "(guile) Declarative Modules"))
 
-(geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
+(geiser-custom--defcustom geiser-guile-debug-show-bt-p t
   "Whether to automatically show a full backtrace when entering the debugger.
 If nil, only the last frame is shown."
   :type 'boolean)
@@ -144,14 +144,23 @@ effect on new REPLs.  For existing ones, use the command
   (expand-file-name "src" (file-name-directory load-file-name))
   "Directory where the Guile scheme geiser modules are installed.")
 
+(defvar geiser-guile--conn-address nil)
+
+(defun geiser-guile--get-connection-address (&optional new)
+  "The path to the UNIX socket to talk to Guile in a connection."
+  (when new
+    (setq geiser-guile--conn-address (make-temp-name "/tmp/geiser-guile-")))
+  geiser-guile--conn-address)
+
 (defun geiser-guile--parameters ()
   "Return a list with all parameters needed to start Guile.
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file)))
-        (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
+        (q-flags (and (not geiser-guile-load-init-file-p) '("-q")))
+        (cflag (format "--listen=%s" (geiser-guile--get-connection-address t))))
     `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-      ,@q-flags "-L" ,geiser-guile-scheme-dir
+      ,@q-flags "-L" ,geiser-guile-scheme-dir ,cflag
       ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
                                geiser-guile-load-path))
       ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
@@ -413,7 +422,8 @@ See `geiser-guile-use-declarative-modules-p'."
         (g-load-path (buffer-local-value 'geiser-guile-load-path
                                          (or geiser-repl--last-scm-buffer
                                              (current-buffer)))))
-    (when remote (geiser-guile--set-geiser-load-path))
+    (when (or geiser-guile--connection-address remote)
+      (geiser-guile--set-geiser-load-path))
     (geiser-guile--set-up-declarative-modules)
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
     (dolist (dir g-load-path)
@@ -461,6 +471,7 @@ See `geiser-guile-use-declarative-modules-p'."
   (version-command geiser-guile--version)
   (minimum-version geiser-guile-minimum-version)
   (repl-startup geiser-guile--startup)
+  (connection-address geiser-guile--get-connection-address)
   (prompt-regexp geiser-guile--prompt-regexp)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (enter-debugger geiser-guile--enter-debugger)
