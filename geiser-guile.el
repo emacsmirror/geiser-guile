@@ -83,11 +83,6 @@ exported modules."
 If nil, only the last frame is shown."
   :type 'boolean)
 
-(geiser-custom--defcustom geiser-guile-jump-on-debug-p nil
-  "Whether to automatically jump to error when entering the debugger.
-If t, Geiser will use `next-error' to jump to the error's location."
-  :type 'boolean)
-
 (geiser-custom--defcustom geiser-guile-show-debug-help-p t
   "Whether to show brief help in the echo area when entering the debugger."
   :type 'boolean)
@@ -243,25 +238,16 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--enter-debugger ()
   "Tell Geiser to interact with the debugger."
-  (let ((bt-cmd (format ",geiser-newline\n,error-message\n,%s\n"
-                        (if geiser-guile-debug-show-bt-p "bt" "fr"))))
-    (compilation-forget-errors)
-    (goto-char (point-max))
-    (geiser-repl--prepare-send)
-    (comint-send-string nil bt-cmd)
-    (when geiser-guile-show-debug-help-p
-      (message "Debug REPL. Enter ,q to quit, ,h for help."))
-    (when geiser-guile-jump-on-debug-p
-      (accept-process-output (get-buffer-process (current-buffer)) 0.2 nil t)
-      (ignore-errors (next-error)))
-    t))
+  (when geiser-guile-show-debug-help-p
+    (message "Debugger active. Press , for commands."))
+  nil)
 
 (defun geiser-guile--display-error (_module key msg)
   "Display error with given KEY and message MSG."
   (when (stringp msg)
     (save-excursion (insert msg))
     (geiser-edit--buttonize-files))
-  (and (not key) (not (zerop (length msg))) msg))
+  (not (zerop (length msg))))
 
 
 ;;; Trying to ascertain whether a buffer is Guile Scheme:
