@@ -165,9 +165,10 @@ This function uses `geiser-guile-init-file' if it exists."
   "^[^@(\n]+@([^)]*?) \\[\\([0-9]+\\)\\]> ")
 
 (defconst geiser-guile--clean-rx
-  (format "\\(%s\\)\\|\\(^\\$[0-9]+ = [^\n]+$\\)"
+  (format "\\(%s\\)\\|\\(^\\$[0-9]+ = [^\n]+$\\)\\|%s"
           (geiser-con--combined-prompt geiser-guile--prompt-regexp
-                                       geiser-guile--debugger-prompt-regexp)))
+                                       geiser-guile--debugger-prompt-regexp)
+          "\\(\nEntering a new prompt.  Type `,bt' for [^\n]+\\.$\\)"))
 
 
 ;;; Evaluation support:
@@ -247,9 +248,9 @@ This function uses `geiser-guile-init-file' if it exists."
 
 ;;; Compilation shell regexps
 
-(defconst geiser-guile--path-rx "^In \\([^:\n]+\\):\n")
+(defconst geiser-guile--path-rx "^In \\([^:\n ]+\\):\n")
 
-(defconst geiser-guile--rel-path-rx "^In +\\([^/\n:]+\\):\n")
+(defconst geiser-guile--rel-path-rx "^In +\\([^/\n: ]+\\):\n")
 
 (defvar geiser-guile--file-cache (make-hash-table :test 'equal)
   "Internal cache.")
@@ -264,7 +265,8 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--resolve-file (file)
   "Find the given FILE, if it's indeed a file."
   (when (and (stringp file)
-             (not (member file '("socket" "stdin" "unknown file"))))
+             (not (member file
+                          '("socket" "stdin" "unknown file" "current input"))))
     (message "Resolving %s" file)
     (cond ((file-name-absolute-p file) file)
           (t (when-let (f (geiser-guile--find-file file))
