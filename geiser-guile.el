@@ -162,7 +162,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile--prompt-regexp "^[^@(\n]+@([^)]*)> ")
 (defconst geiser-guile--debugger-prompt-regexp
-  "^[^@(\n]+@([^)]*?) \\[[0-9]+\\]> ")
+  "^[^@(\n]+@([^)]*?) \\[\\([0-9]+\\)\\]> ")
 
 (defconst geiser-guile--clean-rx
   (format "\\(%s\\)\\|\\(^\\$[0-9]+ = [^\n]+$\\)"
@@ -188,7 +188,9 @@ This function uses `geiser-guile-init-file' if it exists."
     (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
 
 (defun geiser-guile--clean-up-output (str)
-  (replace-regexp-in-string geiser-guile--clean-rx "" str))
+  (let ((msg (when (string-match geiser-guile--debugger-prompt-regexp str)
+               (format "\n[Debugging level: %s]" (match-string 1 str)))))
+    (concat (replace-regexp-in-string geiser-guile--clean-rx "" str) msg)))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
@@ -265,9 +267,6 @@ This function uses `geiser-guile-init-file' if it exists."
              (not (member file '("socket" "stdin" "unknown file"))))
     (message "Resolving %s" file)
     (cond ((file-name-absolute-p file) file)
-          ((string= "current input" file)
-           (when geiser-debug--sender-buffer
-             (buffer-file-name geiser-debug--sender-buffer)))
           (t (when-let (f (geiser-guile--find-file file))
                (puthash file f geiser-guile--file-cache))))))
 
