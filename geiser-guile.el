@@ -7,9 +7,9 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, guile, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
-;; Package-Requires: ((emacs "24.4") (geiser "0.19"))
+;; Package-Requires: ((emacs "25.1") (geiser "0.20"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.19
+;; Version: 0.20
 
 ;; This file is NOT part of GNU Emacs.
 
