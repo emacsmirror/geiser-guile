@@ -164,6 +164,11 @@ This function uses `geiser-guile-init-file' if it exists."
 (defconst geiser-guile--debugger-prompt-regexp
   "^[^@(\n]+@([^)]*?) \\[[0-9]+\\]> ")
 
+(defconst geiser-guile--clean-rx
+  (format "\\(%s\\)\\|\\(^\\$[0-9]+ = [^\n]+$\\)"
+          (geiser-con--combined-prompt geiser-guile--prompt-regexp
+                                       geiser-guile--debugger-prompt-regexp)))
+
 
 ;;; Evaluation support:
 (defsubst geiser-guile--linearize-args (args)
@@ -179,7 +184,11 @@ This function uses `geiser-guile-init-file' if it exists."
                             (if (cddr args) "" " ()")))
     ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
     ((no-values) ",geiser-no-values")
+    ((debug) (concat "," (geiser-guile--linearize-args args) "\n\"\""))
     (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
+
+(defun geiser-guile--clean-up-output (str)
+  (replace-regexp-in-string geiser-guile--clean-rx "" str))
 
 (defconst geiser-guile--module-re
   "(define-module +\\(([^)]+)\\)")
@@ -234,7 +243,49 @@ This function uses `geiser-guile-init-file' if it exists."
     (save-excursion (skip-syntax-backward "^'-()>") (point))))
 
 
+;;; Compilation shell regexps
+
+(defconst geiser-guile--path-rx "^In \\([^:\n]+\\):\n")
+
+(defconst geiser-guile--rel-path-rx "^In +\\([^/\n:]+\\):\n")
+
+(defvar geiser-guile--file-cache (make-hash-table :test 'equal)
+  "Internal cache.")
+
+(defun geiser-guile--find-file (file)
+  (or (gethash file geiser-guile--file-cache)
+      (with-current-buffer (or geiser-debug--sender-buffer (current-buffer))
+        (when-let (r geiser-repl--repl)
+          (with-current-buffer r
+            (geiser-eval--send/result `(:eval (:ge find-file ,file))))))))
+
+(defun geiser-guile--resolve-file (file)
+  "Find the given FILE, if it's indeed a file."
+  (when (and (stringp file)
+             (not (member file '("socket" "stdin" "unknown file"))))
+    (message "Resolving %s" file)
+    (cond ((file-name-absolute-p file) file)
+          ((string= "current input" file)
+           (when geiser-debug--sender-buffer
+             (buffer-file-name geiser-debug--sender-buffer)))
+          (t (when-let (f (geiser-guile--find-file file))
+               (puthash file f geiser-guile--file-cache))))))
+
+(defun geiser-guile--resolve-file-x ()
+  "Check if last match contain a resolvable file."
+  (let ((f (geiser-guile--resolve-file (match-string-no-properties 1))))
+    (and (stringp f) (list f))))
+
+
 ;;; Error display
+
+(defun geiser-guile--set-up-error-links ()
+  (setq-local compilation-error-regexp-alist
+              `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
+                ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)
+                ("^\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3)))
+  (font-lock-add-keywords nil
+                          `((,geiser-guile--path-rx 1 compilation-error-face))))
 
 (defun geiser-guile--enter-debugger ()
   "Tell Geiser to interact with the debugger."
@@ -245,8 +296,8 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--display-error (_module key msg)
   "Display error with given KEY and message MSG."
   (when (stringp msg)
-    (save-excursion (insert msg))
-    (geiser-edit--buttonize-files))
+    (geiser-guile--set-up-error-links)
+    (save-excursion (insert msg)))
   (not (zerop (length msg))))
 
 
@@ -329,31 +380,6 @@ This function uses `geiser-guile-init-file' if it exists."
  (with-throw-handler 1))
 
 
-;;; Compilation shell regexps
-
-(defconst geiser-guile--path-rx "^In \\([^:\n ]+\\):\n")
-
-(defconst geiser-guile--rel-path-rx "^In +\\([^/\n :]+\\):\n")
-
-(defvar geiser-guile--file-cache (make-hash-table :test 'equal)
-  "Internal cache.")
-
-(defun geiser-guile--resolve-file (file)
-  "Find the given FILE, if it's indeed a file."
-  (when (and (stringp file)
-             (not (member file '("socket" "stdin" "unknown file"))))
-    (if (file-name-absolute-p file) file
-      (or (gethash file geiser-guile--file-cache)
-          (puthash file
-                   (geiser-eval--send/result `(:eval (:ge find-file ,file)))
-                   geiser-guile--file-cache)))))
-
-(defun geiser-guile--resolve-file-x ()
-  "Check if last match contain a resolvable file."
-  (let ((f (geiser-guile--resolve-file (match-string-no-properties 1))))
-    (and (stringp f) (list f))))
-
-
 ;;; REPL startup
 
 (defconst geiser-guile-minimum-version "2.2")
@@ -397,18 +423,12 @@ See `geiser-guile-use-declarative-modules-p'."
 
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
-  (set (make-local-variable 'compilation-error-regexp-alist)
-       `((,geiser-guile--path-rx geiser-guile--resolve-file-x)
-         ("^  +\\([0-9]+\\):\\([0-9]+\\)" nil 1 2)
-         ("^\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3)))
-  (compilation-setup t)
-  (font-lock-add-keywords nil `((,geiser-guile--path-rx
-                                 1 compilation-error-face)))
+  (geiser-guile--set-up-error-links)
   (let ((geiser-log-verbose-p t)
         (g-load-path (buffer-local-value 'geiser-guile-load-path
                                          (or geiser-repl--last-scm-buffer
                                              (current-buffer)))))
-    (when (or geiser-guile--connection-address remote)
+    (when (or geiser-guile--conn-address remote)
       (geiser-guile--set-geiser-load-path))
     (geiser-guile--set-up-declarative-modules)
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
@@ -459,6 +479,7 @@ See `geiser-guile-use-declarative-modules-p'."
   (repl-startup geiser-guile--startup)
   (connection-address geiser-guile--get-connection-address)
   (prompt-regexp geiser-guile--prompt-regexp)
+  (clean-up-output geiser-guile--clean-up-output)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
   (enter-debugger geiser-guile--enter-debugger)
   (marshall-procedure geiser-guile--geiser-procedure)
