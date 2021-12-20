@@ -441,33 +441,38 @@ See `geiser-guile-use-declarative-modules-p'."
 
 ;;; Manual lookup
 
-(defun geiser-guile--info-spec (&optional nodes)
+(defun geiser-guile--info-spec ()
   "Return info specification for given NODES."
   (let* ((nrx "^[       ]+-+ [^:]+:[    ]*")
          (drx "\\b")
          (res (when (Info-find-file "r5rs" t)
                 `(("(r5rs)Index" nil ,nrx ,drx)))))
-    (dolist (node (or nodes geiser-guile-manual-lookup-nodes) res)
+    (dolist (node geiser-guile-manual-lookup-nodes res)
       (when (Info-find-file node t)
         (mapc (lambda (idx)
                 (add-to-list 'res
                              (list (format "(%s)%s" node idx) nil nrx drx)))
-              '("Variable Index" "Procedure Index" "R5RS Index"))))))
+              '("R5RS Index" "Concept Index" "Procedure Index" "Variable Index"))))))
 
-
-(info-lookup-add-help :topic 'symbol :mode 'geiser-guile-mode
+(info-lookup-add-help :topic 'symbol
+                      :mode 'geiser-guile-mode
                       :ignore-case nil
                       :regexp "[^()`',\"        \n]+"
                       :doc-spec (geiser-guile--info-spec))
 
+(defun geiser-guile--info-lookup (id)
+  (cond ((null id) (info "guile"))
+        ((ignore-errors (info-lookup-symbol (format "%s" id) 'geiser-guile-mode) t))
+        ((and (listp id) (geiser-guile--info-lookup (car (last id)))))
+        (t (geiser-guile--info-lookup (when (listp id) (butlast id))))))
+
 (defun geiser-guile--manual-look-up (id _mod)
   "Look for ID in the Guile manuals."
-  (let ((info-lookup-other-window-flag
-         geiser-guile-manual-lookup-other-window-p))
-    (info-lookup-symbol (symbol-name id) 'geiser-guile-mode))
-  (when geiser-guile-manual-lookup-other-window-p
-    (switch-to-buffer-other-window "*info*"))
-  (search-forward (format "%s" id) nil t))
+  (let ((info-lookup-other-window-flag geiser-guile-manual-lookup-other-window-p))
+    (geiser-guile--info-lookup id)
+    (when geiser-guile-manual-lookup-other-window-p
+      (switch-to-buffer-other-window "*info*"))
+    (search-forward (format "%s" id) nil t)))
 
 
 ;;; Implementation definition:
