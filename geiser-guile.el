@@ -471,8 +471,7 @@ See `geiser-guile-use-declarative-modules-p'."
   (let ((info-lookup-other-window-flag geiser-guile-manual-lookup-other-window-p))
     (geiser-guile--info-lookup id)
     (when geiser-guile-manual-lookup-other-window-p
-      (switch-to-buffer-other-window "*info*"))
-    (search-forward (format "%s" id) nil t)))
+      (switch-to-buffer-other-window "*info*"))))
 
 
 ;;; Implementation definition:
