@@ -142,7 +142,8 @@ effect on new REPLs.  For existing ones, use the command
 (defvar geiser-guile--conn-address nil)
 
 (defun geiser-guile--get-connection-address (&optional new)
-  "The path to the UNIX socket to talk to Guile in a connection."
+  "The path to the UNIX socket to talk to Guile in a connection.
+Unused for now."
   (when new
     (setq geiser-guile--conn-address (make-temp-name "/tmp/geiser-guile-")))
   geiser-guile--conn-address)
@@ -152,10 +153,12 @@ effect on new REPLs.  For existing ones, use the command
 This function uses `geiser-guile-init-file' if it exists."
   (let ((init-file (and (stringp geiser-guile-init-file)
                         (expand-file-name geiser-guile-init-file)))
-        (q-flags (and (not geiser-guile-load-init-file-p) '("-q")))
-        (cflag (format "--listen=%s" (geiser-guile--get-connection-address t))))
+        (c-flags (when geiser-guile--conn-address
+                   `(,(format "--listen=%s"
+                              (geiser-guile--get-connection-address t)))))
+        (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
     `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
-      ,@q-flags "-L" ,geiser-guile-scheme-dir ,cflag
+      ,@q-flags "-L" ,geiser-guile-scheme-dir ,@c-flags
       ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
                                geiser-guile-load-path))
       ,@(and init-file (file-readable-p init-file) (list "-l" init-file)))))
@@ -482,7 +485,6 @@ See `geiser-guile-use-declarative-modules-p'."
   (version-command geiser-guile--version)
   (minimum-version geiser-guile-minimum-version)
   (repl-startup geiser-guile--startup)
-  (connection-address geiser-guile--get-connection-address)
   (prompt-regexp geiser-guile--prompt-regexp)
   (clean-up-output geiser-guile--clean-up-output)
   (debugger-prompt-regexp geiser-guile--debugger-prompt-regexp)
