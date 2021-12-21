@@ -39,3 +39,21 @@ geiser-guile.
 
     One can also provide a global list of paths to add to Guile's
     =%load-path= via ~geiser-guile-load-path~.
+
+*** Debugging support
+
+    Guile supports all the debugger commands supported by Geiser (it's
+    in fact used as the reference for the implementation and design of
+    that support).  When the REPL would normally enter its debug mode,
+    with a prompt of the style:
+
+        scheme@(guile-user) [1]>
+
+    showing a debugging level, Geiser will instead bring you to the
+    =*Geiser Dbg*= buffer, where you can access a menu of debugging
+    commands via the ~,~ (comma) key.
+
+    The geiser-guile customization group will show you, among many
+    other, a few flags fine-tuning interaction with the debugger, as
+    well as things like the detail level of error messages (e.g. via
+    ~geiser-guile-warning-level~).
