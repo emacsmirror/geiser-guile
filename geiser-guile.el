@@ -83,6 +83,10 @@ exported modules."
 If nil, only the last frame is shown."
   :type 'boolean)
 
+(geiser-custom--defcustom geiser-guile-debug-show-full-bt-p t
+  "Whether to show full backtraces in the debugger, including local variables."
+  :type 'boolean)
+
 (geiser-custom--defcustom geiser-guile-show-debug-help-p t
   "Whether to show brief help in the echo area when entering the debugger."
   :type 'boolean)
@@ -179,6 +183,13 @@ This function uses `geiser-guile-init-file' if it exists."
   "Concatenate the list ARGS."
   (mapconcat 'identity args " "))
 
+(defun geiser-guile--debug-cmd (args)
+  (let ((args (if (and geiser-guile-debug-show-full-bt-p
+                       (string= (car args) "backtrace"))
+                  '("backtrace" "#:full?" "#t")
+                args)))
+    (concat "," (geiser-guile--linearize-args args) "\n\"\"")))
+
 (defun geiser-guile--geiser-procedure (proc &rest args)
   "Transform PROC in string for a scheme procedure using ARGS."
   (cl-case proc
@@ -188,7 +199,7 @@ This function uses `geiser-guile-init-file' if it exists."
                             (if (cddr args) "" " ()")))
     ((load-file compile-file) (format ",geiser-load-file %s" (car args)))
     ((no-values) ",geiser-no-values")
-    ((debug) (concat "," (geiser-guile--linearize-args args) "\n\"\""))
+    ((debug) (geiser-guile--debug-cmd args))
     (t (format "ge:%s (%s)" proc (geiser-guile--linearize-args args)))))
 
 (defun geiser-guile--clean-up-output (str)
