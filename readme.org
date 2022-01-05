@@ -57,3 +57,8 @@ geiser-guile.
     other, a few flags fine-tuning interaction with the debugger, as
     well as things like the detail level of error messages (e.g. via
     ~geiser-guile-warning-level~).
+
+*** Tramp support
+    Geiser guile can be used remotely via tramp connections: the REPL
+    process will be run in the machine where the tramp-accessed file
+    lives.  Implemented by Felipe Lema.

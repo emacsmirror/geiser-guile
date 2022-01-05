@@ -1,6 +1,6 @@
 ;;; geiser-guile.el --- Guile's implementation of the geiser protocols  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2022 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
@@ -149,30 +149,27 @@ effect on new REPLs.  For existing ones, use the command
   "Location for scm files to communicate using REPL that are local to process.
 
 When using Tramp buffers, the guile modules are not local. They'll be stored in
-this location for further cleanup")
+this location for further cleanup.")
+
 (defun geiser-guile--remote-copy (source-path target-path)
   "Copy source-path to target-path ensuring symlinks are resolved."
   ;; when using `straight', guile scripts that need to be evaluated will be
   ;; symlinks
   ;; `copy-directory' will copy broken symlinks
   ;; so we manually copy them to avoid broken symlinks in remote host
-  (cond
-   ((file-symlink-p source-path)
-    (geiser-guile--remote-copy-ensure-no-symlinks
-     (file-truename source-path)
-     target-path))
-   ((file-directory-p source-path)
-    (unless (file-directory-p target-path) (make-directory target-path t))
-    (let ((dest (file-name-as-directory target-path)))
-      (dolist (f (seq-difference (directory-files source-path) '("." "..")))
-        (geiser-guile--remote-copy (expand-file-name f source-path)
-                                   (expand-file-name f dest)))))
-   (t
-    (cl-assert (file-regular-p source-path))
-    (copy-file source-path target-path))))
+  (cond ((file-symlink-p source-path)
+         (geiser-guile--remote-copy (file-truename source-path) target-path))
+        ((file-directory-p source-path)
+         (unless (file-directory-p target-path) (make-directory target-path t))
+         (let ((dest (file-name-as-directory target-path)))
+           (dolist (f (seq-difference (directory-files source-path) '("." "..")))
+             (geiser-guile--remote-copy (expand-file-name f source-path)
+                                        (expand-file-name f dest)))))
+        (t (cl-assert (file-regular-p source-path))
+           (copy-file source-path target-path))))
 
 (defun geiser-guile-ensure-scheme-dir ()
-  "\(Maybe setup and \) return dir for Guile scheme geiser modules.
+  "Maybe setup and return dir for Guile scheme geiser modules.
 
 If using a remote Tramp buffer, this function will copy the modules to a
 temporary location in the remote server and the return it.
@@ -181,23 +178,19 @@ Else, will just return `geiser-guile-scheme-dir'."
         (geiser-guile-scheme-local-dir) ;; remote files are already there
         (t
          (let* ((temporary-file-directory (temporary-file-directory))
-                (remote-temp-dir
-                 (make-temp-file "emacs-geiser-guile" t)))
+                (remote-temp-dir (make-temp-file "emacs-geiser-guile" t)))
            (message "Setting up Tramp Guile REPL...")
            (let ((inhibit-message t)) ;; prevent "Copying … to … " from dired
              (geiser-guile--remote-copy
               geiser-guile-scheme-dir
-              (concat
-               (file-name-as-directory remote-temp-dir)
-               (file-name-nondirectory
-                (directory-file-name geiser-guile-scheme-dir)))))
+              (concat (file-name-as-directory remote-temp-dir)
+                      (file-name-nondirectory
+                       (directory-file-name geiser-guile-scheme-dir)))))
            ;; return the directory name as local to (remote) process
            (setq geiser-guile-scheme-local-dir
-                 (concat
-                  (file-name-as-directory
-                   (file-local-name
-                    remote-temp-dir))
-                  (file-name-nondirectory geiser-guile-scheme-dir)))))))
+                 (concat (file-name-as-directory
+                          (file-local-name remote-temp-dir))
+                         (file-name-nondirectory geiser-guile-scheme-dir)))))))
 
 (defvar geiser-guile--conn-address nil)
 
