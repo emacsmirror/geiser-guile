@@ -1,4 +1,11 @@
-* Guile and Geiser talk to each other
+#+TITLE: Geiser and Guile talk to each other
+#+OPTIONS: d:nil
+#+EXPORT_FILE_NAME: geiser-guile.texi
+#+TEXINFO_DIR_CATEGORY: Emacs
+#+TEXINFO_DIR_TITLE: Geiser Guile: (geiser-guile).
+#+TEXINFO_DIR_DESC: Support for Guile in Geiser
+
+* Overview
 
 This package provides support for using [[https://www.gnu.org/software/guile/][GNU Guile]] in Emacs with
 [[http://geiser.nongnu.org][Geiser]].
@@ -22,43 +29,43 @@ to it (or its [[https://geiser.nongnu.org][online version]]) for a general descr
 schemes work.  We provide below some additional details specific to
 geiser-guile.
 
-*** Start up
+* Start up
 
-    When launching the Guile REPL, geiser will invoke the binary
-    configured in ~geiser-guile-binary~ (simply "guile" by default)
-    which in turn will load ~geiser-guile-init-file~, if any.
+  When launching the Guile REPL, geiser will invoke the binary
+  configured in ~geiser-guile-binary~ (simply "guile" by default)
+  which in turn will load ~geiser-guile-init-file~, if any.
 
-    Note, however, that specifying ~geiser-guile-init-file~ is /not/
-    equivalent to changing Guile's initialization file (=~/.guile=),
-    because the former is loaded using the =-l= flag, together with =-q=
-    to disable loading the second.  But there are subtle differences
-    in the way Guile loads the initialization file versus how it loads
-    a file specified via the =-l= flag.  If what you want is just
-    loading =~/.guile=, leave ~geiser-guile-init-file~ alone and set
-    ~geiser-guile-load-init-file-p~ to ~t~ instead.
+  Note, however, that specifying ~geiser-guile-init-file~ is /not/
+  equivalent to changing Guile's initialization file (=~/.guile=),
+  because the former is loaded using the =-l= flag, together with =-q=
+  to disable loading the second.  But there are subtle differences
+  in the way Guile loads the initialization file versus how it loads
+  a file specified via the =-l= flag.  If what you want is just
+  loading =~/.guile=, leave ~geiser-guile-init-file~ alone and set
+  ~geiser-guile-load-init-file-p~ to ~t~ instead.
 
-    One can also provide a global list of paths to add to Guile's
-    =%load-path= via ~geiser-guile-load-path~.
+  One can also provide a global list of paths to add to Guile's
+  =%load-path= via ~geiser-guile-load-path~.
 
-*** Debugging support
+* Debugging support
 
-    Guile supports all the debugger commands supported by Geiser (it's
-    in fact used as the reference for the implementation and design of
-    that support).  When the REPL would normally enter its debug mode,
-    with a prompt of the style:
+  Guile supports all the debugger commands supported by Geiser (it's
+  in fact used as the reference for the implementation and design of
+  that support).  When the REPL would normally enter its debug mode,
+  with a prompt of the style:
 
-        scheme@(guile-user) [1]>
+      scheme@(guile-user) [1]>
 
-    showing a debugging level, Geiser will instead bring you to the
-    =*Geiser Dbg*= buffer, where you can access a menu of debugging
-    commands via the ~,~ (comma) key.
+  showing a debugging level, Geiser will instead bring you to the
+  =*Geiser Dbg*= buffer, where you can access a menu of debugging
+  commands via the ~,~ (comma) key.
 
-    The geiser-guile customization group will show you, among many
-    other, a few flags fine-tuning interaction with the debugger, as
-    well as things like the detail level of error messages (e.g. via
-    ~geiser-guile-warning-level~).
+  The geiser-guile customization group will show you, among many
+  other, a few flags fine-tuning interaction with the debugger, as
+  well as things like the detail level of error messages (e.g. via
+  ~geiser-guile-warning-level~).
 
-*** Tramp support
-    Geiser guile can be used remotely via tramp connections: the REPL
-    process will be run in the machine where the tramp-accessed file
-    lives.  Implemented by Felipe Lema.
+* Tramp support
+  Geiser guile can be used remotely via tramp connections: the REPL
+  process will be run in the machine where the tramp-accessed file
+  lives.  Implemented by Felipe Lema.
