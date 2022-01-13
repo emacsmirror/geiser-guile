@@ -9,7 +9,7 @@
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
 ;; Package-Requires: ((emacs "25.1") (geiser "0.21"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.21
+;; Version: 0.21.1
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -175,7 +175,8 @@ If using a remote Tramp buffer, this function will copy the modules to a
 temporary location in the remote server and the return it.
 Else, will just return `geiser-guile-scheme-dir'."
   (cond ((not (and (fboundp 'tramp-tramp-file-p)
-                   (tramp-tramp-file-p default-directory))) geiser-guile-scheme-dir)
+                   (tramp-tramp-file-p default-directory)))
+         geiser-guile-scheme-dir)
         (geiser-guile-scheme-local-dir) ;; remote files are already there
         (t
          (let* ((temporary-file-directory (temporary-file-directory))
