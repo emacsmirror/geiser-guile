@@ -9,7 +9,7 @@
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
 ;; Package-Requires: ((emacs "25.1") (geiser "0.21"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.21.1
+;; Version: 0.21.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -363,8 +363,8 @@ This function uses `geiser-guile-init-file' if it exists."
     (message "Debugger active. Press , for commands."))
   nil)
 
-(defun geiser-guile--display-error (_module key msg)
-  "Display error with given KEY and message MSG."
+(defun geiser-guile--display-error (_module _key msg)
+  "Display error with given message MSG."
   (when (stringp msg)
     (geiser-guile--set-up-error-links)
     (save-excursion (insert msg)))
@@ -454,8 +454,8 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defconst geiser-guile-minimum-version "2.2")
 
-(defun geiser-guile--version (binary)
-  "Find Guile's version running BINARY."
+(defun geiser-guile--version (_binary)
+  "Find Guile's version running the configured Guile binary."
   ;; maybe one day we'll have `process-lines' with tramp support
   (shell-command-to-string
    (format "%s -c %s"
