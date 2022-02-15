@@ -457,10 +457,12 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--version (_binary)
   "Find Guile's version running the configured Guile binary."
   ;; maybe one day we'll have `process-lines' with tramp support
-  (shell-command-to-string
-   (format "%s -c %s"
-           (geiser-guile--binary)
-           (shell-quote-argument "(display (version))"))))
+  (let ((shell-command-switch "-c")
+        (shell-file-name "sh"))
+    (shell-command-to-string
+     (format "%s -c %s"
+             (geiser-guile--binary)
+             (shell-quote-argument "(display (version))")))))
 
 (defun geiser-guile-update-warning-level ()
   "Update the warning level used by the REPL.
