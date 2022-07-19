@@ -78,9 +78,7 @@
 
 (define (program-arities prog)
   (let ((addrs (program-address-range prog)))
-    (if (pair? addrs)
-        (find-program-arities (car addrs))
-        '())))
+    (and (pair? addrs) (find-program-arities (car addrs)))))
 
 (define (arguments proc)
   (define (p-args prog)
