@@ -266,7 +266,7 @@ This function uses `geiser-guile-init-file' if it exists."
   "(define-module +\\(([^)]+)\\)")
 
 (defconst geiser-guile--library-re
-  "(\\(?:define-\\)?library +\\(([^)]+)\\)")
+  "(\\(?:define-\\)?library[[:blank:]\n]+\\(([^)]+)\\)")
 
 (defun geiser-guile--get-module (&optional module)
   "Find current buffer's module using MODULE as a hint."
