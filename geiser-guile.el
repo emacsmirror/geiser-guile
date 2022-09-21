@@ -79,13 +79,20 @@ exported modules."
   :type 'boolean
   :link '(info-link "(guile) Declarative Modules"))
 
+(geiser-custom--defcustom geiser-guile-debug-backwards-backtrace t
+  "Whether to configure backtraces using the 'backwards' ordering."
+  :type 'boolean)
+
+(geiser-custom--defcustom geiser-guile-debug-terminal-width 999
+  "Maximum number of columns shown in backtraces.
+Normally, you'd want a big value here so that messages are not
+truncated.  Set to a negative value if you prefer that geiser
+does not set it on startup."
+  :type 'integer)
+
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p t
   "Whether to automatically show a full backtrace when entering the debugger.
 If nil, only the last frame is shown."
-  :type 'boolean)
-
-(geiser-custom--defcustom geiser-guile-debug-backwards-backtrace t
-  "Whether to configure backtraces using the 'backwards' ordering."
   :type 'boolean)
 
 (geiser-custom--defcustom geiser-guile-debug-show-full-bt-p t
@@ -502,9 +509,13 @@ See `geiser-guile-use-declarative-modules-p'."
       (geiser-eval--send/wait code))))
 
 (defun geiser-guile--set-up-backtrace ()
-  "Set up Guile's backtrace ordering."
+  "Set up Guile's backtrace properties."
   (when geiser-guile-debug-backwards-backtrace
-    (geiser-eval--send/wait '(debug-enable 'backwards))))
+    (geiser-eval--send/wait '(debug-enable 'backwards)))
+  (when (> geiser-guile-debug-terminal-width 0)
+    (geiser-eval--send/wait `(begin ((@ (system repl debug) terminal-width)
+                                     ,geiser-guile-debug-terminal-width)
+                                    'ok))))
 
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
