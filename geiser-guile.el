@@ -84,6 +84,10 @@ exported modules."
 If nil, only the last frame is shown."
   :type 'boolean)
 
+(geiser-custom--defcustom geiser-guile-debug-backwards-backtrace t
+  "Whether to configure backtraces using the 'backwards' ordering."
+  :type 'boolean)
+
 (geiser-custom--defcustom geiser-guile-debug-show-full-bt-p t
   "Whether to show full backtraces in the debugger, including local variables."
   :type 'boolean)
@@ -497,6 +501,11 @@ See `geiser-guile-use-declarative-modules-p'."
     (let ((code '(begin (eval-when (expand) (user-modules-declarative? :f)) 'ok)))
       (geiser-eval--send/wait code))))
 
+(defun geiser-guile--set-up-backtrace ()
+  "Set up Guile's backtrace ordering."
+  (when geiser-guile-debug-backwards-backtrace
+    (geiser-eval--send/wait '(debug-enable 'backwards))))
+
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
   (geiser-guile--set-up-error-links)
@@ -507,6 +516,7 @@ See `geiser-guile-use-declarative-modules-p'."
     (when (or geiser-guile--conn-address remote)
       (geiser-guile--set-geiser-load-path))
     (geiser-guile--set-up-declarative-modules)
+    (geiser-guile--set-up-backtrace)
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
     (dolist (dir g-load-path)
       (let ((dir (expand-file-name dir)))
