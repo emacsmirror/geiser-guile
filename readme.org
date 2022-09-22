@@ -42,7 +42,7 @@ geiser-guile.
   in the way Guile loads the initialization file versus how it loads
   a file specified via the =-l= flag.  If what you want is just
   loading =~/.guile=, leave ~geiser-guile-init-file~ alone and set
-  ~geiser-guile-load-init-file-p~ to ~t~ instead.
+  ~geiser-guile-load-init-file~ to ~t~ instead.
 
   One can also provide a global list of paths to add to Guile's
   =%load-path= via ~geiser-guile-load-path~.
