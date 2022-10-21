@@ -62,7 +62,7 @@ good candidate for an entry in your project's .dir-locals.el."
 (geiser-custom--defcustom geiser-guile-init-file "~/.guile-geiser"
   "Initialization file with user code for the Guile REPL.
 If all you want is to load ~/.guile, set
-`geiser-guile-load-init-file-p' instead."
+`geiser-guile-load-init-file' instead."
   :type 'string)
 
 (geiser-custom--defcustom geiser-guile-load-init-file nil
@@ -154,9 +154,13 @@ effect on new REPLs.  For existing ones, use the command
 (define-obsolete-variable-alias
   'geiser-guile-case-sensitive-p 'geiser-guile-case-sensitive "0.26.2")
 
-(geiser-custom--defcustom geiser-guile-manual-lookup-other-window-p nil
+(geiser-custom--defcustom geiser-guile-manual-lookup-other-window nil
   "Non-nil means pop up the Info buffer in another window."
   :type 'boolean)
+
+(define-obsolete-variable-alias
+  'geiser-guile-manual-lookup-other-window-p
+  'geiser-guile-manual-lookup-other-window "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-nodes
     '("Guile" "guile-2.0")
@@ -246,7 +250,7 @@ This function uses `geiser-guile-init-file' if it exists."
         (c-flags (when geiser-guile--conn-address
                    `(,(format "--listen=%s"
                               (geiser-guile--get-connection-address t)))))
-        (q-flags (and (not geiser-guile-load-init-file-p) '("-q"))))
+        (q-flags (and (not geiser-guile-load-init-file) '("-q"))))
     `(,@(and (listp geiser-guile-binary) (cdr geiser-guile-binary))
       ,@q-flags "-L" ,(geiser-guile-ensure-scheme-dir) ,@c-flags
       ,@(apply 'append (mapcar (lambda (p) (list "-L" p))
@@ -271,7 +275,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (mapconcat 'identity args " "))
 
 (defun geiser-guile--debug-cmd (args)
-  (let ((args (if (and geiser-guile-debug-show-full-bt-p
+  (let ((args (if (and geiser-guile-debug-show-full-bt
                        (string= (car args) "backtrace"))
                   '("backtrace" "#:full?" "#t")
                 args)))
@@ -391,7 +395,7 @@ This function uses `geiser-guile-init-file' if it exists."
 
 (defun geiser-guile--enter-debugger ()
   "Tell Geiser to interact with the debugger."
-  (when geiser-guile-show-debug-help-p
+  (when geiser-guile-show-debug-help
     (message "Debugger active. Press , for commands."))
   nil)
 
@@ -524,8 +528,8 @@ it spawn a server thread."
 
 (defun geiser-guile--set-up-declarative-modules ()
   "Set up Guile to (not) use declarative modules.
-See `geiser-guile-use-declarative-modules-p'."
-  (unless geiser-guile-use-declarative-modules-p
+See `geiser-guile-use-declarative-modules'."
+  (unless geiser-guile-use-declarative-modules
     (let ((code '(begin (eval-when (expand) (user-modules-declarative? :f)) 'ok)))
       (geiser-eval--send/wait code))))
 
@@ -541,7 +545,7 @@ See `geiser-guile-use-declarative-modules-p'."
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
   (geiser-guile--set-up-error-links)
-  (let ((geiser-log-verbose-p t)
+  (let ((geiser-log-verbose t)
         (g-load-path (buffer-local-value 'geiser-guile-load-path
                                          (or geiser-repl--last-scm-buffer
                                              (current-buffer)))))
@@ -585,9 +589,9 @@ See `geiser-guile-use-declarative-modules-p'."
 
 (defun geiser-guile--manual-look-up (id _mod)
   "Look for ID in the Guile manuals."
-  (let ((info-lookup-other-window-flag geiser-guile-manual-lookup-other-window-p))
+  (let ((info-lookup-other-window-flag geiser-guile-manual-lookup-other-window))
     (geiser-guile--info-lookup id)
-    (when geiser-guile-manual-lookup-other-window-p
+    (when geiser-guile-manual-lookup-other-window
       (switch-to-buffer-other-window "*info*"))))
 
 
@@ -613,7 +617,7 @@ See `geiser-guile-use-declarative-modules-p'."
   (external-help geiser-guile--manual-look-up)
   (check-buffer geiser-guile--guess)
   (keywords geiser-guile--keywords)
-  (case-sensitive geiser-guile-case-sensitive-p))
+  (case-sensitive geiser-guile-case-sensitive))
 
 ;;;###autoload
 (geiser-activate-implementation 'guile)
