@@ -1,4 +1,4 @@
-;;; geiser-guile.el --- Guile's implementation of the geiser protocols  -*- lexical-binding: t; -*-
+;;; geiser-guile.el --- Guile and Geiser talk to each other  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009-2022 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
@@ -39,7 +39,7 @@
                    (require 'tramp))
 
 
-;;; Customization:
+;;; Customization
 
 (defgroup geiser-guile nil
   "Customization for Geiser's Guile flavour."
@@ -164,7 +164,7 @@ effect on new REPLs.  For existing ones, use the command
   :type '(repeat string))
 
 
-;;; REPL support:
+;;; REPL support
 
 (defun geiser-guile--binary ()
   "Return the name of the Guile binary to execute."
@@ -265,7 +265,7 @@ This function uses `geiser-guile-init-file' if it exists."
           "\\(\nEntering a new prompt.  Type `,bt' for [^\n]+\\.$\\)"))
 
 
-;;; Evaluation support:
+;;; Evaluation support
 (defsubst geiser-guile--linearize-args (args)
   "Concatenate the list ARGS."
   (mapconcat 'identity args " "))
@@ -379,7 +379,7 @@ This function uses `geiser-guile-init-file' if it exists."
     (and (stringp f) (list f))))
 
 
-;;; Error display
+;;; Error display and debugger
 
 (defun geiser-guile--set-up-error-links ()
   (setq-local compilation-error-regexp-alist
@@ -403,7 +403,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (not (zerop (length msg))))
 
 
-;;; Trying to ascertain whether a buffer is Guile Scheme:
+;;; Trying to ascertain whether a buffer is Guile Scheme
 
 (defconst geiser-guile--guess-re
   (format "\\(%s\\|#! *.+\\(/\\| \\)guile\\( *\\\\\\)?\\)"
