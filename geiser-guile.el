@@ -7,7 +7,7 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, guile, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/guile
-;; Package-Requires: ((emacs "25.1") (geiser "0.26.1"))
+;; Package-Requires: ((emacs "25.1") (transient "0.3") (geiser "0.26.1"))
 ;; SPDX-License-Identifier: BSD-3-Clause
 ;; Version: 0.26.1
 
@@ -392,6 +392,63 @@ This function uses `geiser-guile-init-file' if it exists."
                 ("^\\(/.*\\):\\([0-9]+\\):\\([0-9]+\\)" 1 2 3)))
   (font-lock-add-keywords nil
                           `((,geiser-guile--path-rx 1 compilation-error-face))))
+
+(defun geiser-guile-debug--send-dbg (thing)
+  (geiser-eval--send/wait (cons :debug (if (listp thing) thing (list thing)))))
+
+(defun geiser-guile-debug--debugger-display (thing ret)
+  (geiser-debug--display-retort (format ",%s" thing)
+                                ret
+                                (geiser-eval--retort-result-str ret nil)))
+
+(defun geiser-guile-debug--send-to-repl (thing)
+  (unless (geiser-debug-active-p) (error "Debugger not active"))
+  (save-window-excursion
+    (with-current-buffer geiser-debug--sender-buffer
+      (when-let (ret (geiser-guile-debug--send-dbg thing))
+        (geiser-guile-debug--debugger-display thing ret)))))
+
+(defun geiser-guile-debug-quit ()
+  "Quit the current debugging session level."
+  (interactive)
+  (geiser-guile-debug--send-to-repl 'quit))
+
+(defun geiser-guile-debug-show-backtrace ()
+  "Quit the current debugging session level."
+  (interactive)
+  (geiser-guile-debug--send-to-repl 'backtrace))
+
+(defun geiser-guile-debug-show-locals ()
+  "Show local variables."
+  (interactive)
+  (geiser-guile-debug--send-to-repl 'locals))
+
+(defun geiser-guile-debug-show-registers ()
+  "Show register values."
+  (interactive)
+  (geiser-guile-debug--send-to-repl 'registers))
+
+(defun geiser-guile-debug-show-error ()
+  "Show error message."
+  (interactive)
+  (geiser-guile-debug--send-to-repl 'error))
+
+(transient-define-prefix geiser-guile--debug-transient ()
+  "Debugging meta-commands."
+  ["Guile debugger"
+   [("b" "Show backtrace" geiser-guile-debug-show-backtrace)
+    ("e" "Show error" geiser-guile-debug-show-error)]
+   [("l" "Show locals" geiser-guile-debug-show-locals)
+    ("r" "Show registers" geiser-guile-debug-show-registers)]
+   [("x" "Exit debug level" geiser-guile-debug-quit)]])
+
+(defun geiser-guile-debug-menu ()
+  "Show available debugging commands, if any."
+  (interactive)
+  (when (and (eq 'guile geiser-impl--implementation) (geiser-debug-active-p))
+    (call-interactively #'geiser-guile--debug-transient)))
+
+(define-key geiser-debug-mode-map "," #'geiser-guile-debug-menu)
 
 (defun geiser-guile--enter-debugger ()
   "Tell Geiser to interact with the debugger."
