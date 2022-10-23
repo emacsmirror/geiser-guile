@@ -436,11 +436,14 @@ This function uses `geiser-guile-init-file' if it exists."
 (transient-define-prefix geiser-guile--debug-transient ()
   "Debugging meta-commands."
   ["Guile debugger"
+   [("n" "Next error" compilation-next-error)
+    ("p" "Previous error" compilation-next-error)
+    ("z" "Scheme buffer" geiser-debug-switch-to-buffer)
+    ("x" "Exit debug level" geiser-guile-debug-quit)]
    [("b" "Show backtrace" geiser-guile-debug-show-backtrace)
-    ("e" "Show error" geiser-guile-debug-show-error)]
-   [("l" "Show locals" geiser-guile-debug-show-locals)
-    ("r" "Show registers" geiser-guile-debug-show-registers)]
-   [("x" "Exit debug level" geiser-guile-debug-quit)]])
+    ("e" "Show error" geiser-guile-debug-show-error)
+    ("l" "Show locals" geiser-guile-debug-show-locals)
+    ("r" "Show registers" geiser-guile-debug-show-registers)]])
 
 (defun geiser-guile-debug-menu ()
   "Show available debugging commands, if any."
