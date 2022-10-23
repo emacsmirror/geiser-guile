@@ -27,6 +27,7 @@
      #:use-module (system base pmatch)
      #:use-module (system vm program)
      #:use-module (ice-9 pretty-print)
+     #:use-module (ice-9 textual-ports)
      #:use-module (system vm loader)))
   (else
    (define-module (geiser evaluation)
@@ -44,7 +45,8 @@
      #:use-module (system base message)
      #:use-module (system base pmatch)
      #:use-module (system vm program)
-     #:use-module (ice-9 pretty-print))))
+     #:use-module (ice-9 pretty-print)
+     #:use-module (ice-9 textual-ports))))
 
 
 (define compile-opts '())
@@ -69,16 +71,36 @@
 
 (ge:set-warnings 'none)
 
+(define context-port #f)
+
+(define switcher-port
+  (make-soft-port (vector (lambda (c) (put-char c context-port))
+                          (lambda (s) (display s context-port))
+                          (lambda () (force-output context-port))
+                          (lambda () (close-port context-port))
+                          (lambda () 0))
+                  "w"))
+
+(define (call-with-switcher-output long-port thunk)
+  (let ((current (current-output-port)))
+    (parameterize ((current-output-port switcher-port))
+      (dynamic-wind
+        (lambda () (set! context-port current))
+        thunk
+        (lambda () (set! context-port long-port))))))
+
 (define (call-with-result thunk)
   (letrec* ((result #f)
+            (long-port (current-output-port))
+            (run-thunk (lambda () (call-with-switcher-output long-port thunk)))
             (output
              (with-output-to-string
                (lambda ()
                  (with-fluids ((*current-warning-port* (current-output-port))
                                (*current-warning-prefix* ""))
                    (with-error-to-port (current-output-port)
-                     (lambda () (set! result
-                                  (map object->string (thunk))))))))))
+                     (lambda ()
+                       (set! result (map object->string (run-thunk))))))))))
     (write `((result ,@result) (output . ,output)))
     (newline)))
 
