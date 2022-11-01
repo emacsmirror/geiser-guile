@@ -36,8 +36,10 @@
 (require 'compile)
 (require 'info-look)
 
-(eval-when-compile (require 'cl-lib)
-                   (require 'tramp))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'tramp)
+  (require 'subr-x))
 
 
 ;;; Customization
