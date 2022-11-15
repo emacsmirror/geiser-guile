@@ -33,6 +33,7 @@
 (require 'geiser-log)
 (require 'geiser)
 
+(require 'transient)
 (require 'compile)
 (require 'info-look)
 
