@@ -69,6 +69,9 @@ If all you want is to load ~/.guile, set
 `geiser-guile-load-init-file' instead."
   :type 'string)
 
+(define-obsolete-variable-alias
+  'geiser-guile-load-init-file-p 'geiser-guile-load-init-file "0.26.2")
+
 (geiser-custom--defcustom geiser-guile-load-init-file nil
   "Whether to load ~/.guile when starting Guile.
 Note that, due to peculiarities in the way Guile loads its init
@@ -77,7 +80,8 @@ this variable to t."
   :type 'boolean)
 
 (define-obsolete-variable-alias
-  'geiser-guile-load-init-file-p 'geiser-guile-load-init-file "0.26.2")
+  'geiser-guile-use-declarative-modules-p 'geiser-guile-use-declarative-modules
+  "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-use-declarative-modules nil
   "Whether Guile should use \"declarative\" modules limiting mutability.
@@ -85,10 +89,6 @@ When set to `t', Guile will enforce immutable bindings in
 exported modules."
   :type 'boolean
   :link '(info-link "(guile) Declarative Modules"))
-
-(define-obsolete-variable-alias
-  'geiser-guile-use-declarative-modules-p 'geiser-guile-use-declarative-modules
-  "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-debug-backwards-backtrace t
   "Whether to configure backtraces using the \\='backwards ordering."
@@ -101,29 +101,27 @@ truncated.  Set to a negative value if you prefer that geiser
 does not set it on startup."
   :type 'integer)
 
+(define-obsolete-variable-alias
+  'geiser-guile-debug-show-bt-p 'geiser-guile-debug-show-bt "0.26.2")
+
 (geiser-custom--defcustom geiser-guile-debug-show-bt t
   "Whether to automatically show a full backtrace when entering the debugger.
 If nil, only the last frame is shown."
   :type 'boolean)
 
 (define-obsolete-variable-alias
-  'geiser-guile-debug-show-bt-p 'geiser-guile-debug-show-bt "0.26.2")
-
+  'geiser-guile-debug-show-full-bt-p 'geiser-guile-debug-show-full-bt "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-debug-show-full-bt t
   "Whether to show full backtraces in the debugger, including local variables."
   :type 'boolean)
 
 (define-obsolete-variable-alias
-  'geiser-guile-debug-show-full-bt-p 'geiser-guile-debug-show-full-bt "0.26.2")
-
+  'geiser-guile-show-debug-help-p 'geiser-guile-show-debug-help "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-show-debug-help t
   "Whether to show brief help in the echo area when entering the debugger."
   :type 'boolean)
-
-(define-obsolete-variable-alias
-  'geiser-guile-show-debug-help-p 'geiser-guile-show-debug-help "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-warning-level 'medium
   "Verbosity of the warnings reported by Guile.
@@ -151,20 +149,20 @@ effect on new REPLs.  For existing ones, use the command
   "Extra keywords highlighted in Guile scheme buffers."
   :type '(repeat string))
 
+(define-obsolete-variable-alias
+  'geiser-guile-case-sensitive-p 'geiser-guile-case-sensitive "0.26.2")
+
 (geiser-custom--defcustom geiser-guile-case-sensitive t
   "Non-nil means keyword highlighting is case-sensitive."
   :type 'boolean)
 
 (define-obsolete-variable-alias
-  'geiser-guile-case-sensitive-p 'geiser-guile-case-sensitive "0.26.2")
+  'geiser-guile-manual-lookup-other-window-p
+  'geiser-guile-manual-lookup-other-window "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-other-window nil
   "Non-nil means pop up the Info buffer in another window."
   :type 'boolean)
-
-(define-obsolete-variable-alias
-  'geiser-guile-manual-lookup-other-window-p
-  'geiser-guile-manual-lookup-other-window "0.26.2")
 
 (geiser-custom--defcustom geiser-guile-manual-lookup-nodes
     '("Guile" "guile-2.0")
