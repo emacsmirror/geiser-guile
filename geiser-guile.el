@@ -1,6 +1,6 @@
 ;;; geiser-guile.el --- Guile and Geiser talk to each other  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2023 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
@@ -36,10 +36,10 @@
 (require 'transient)
 (require 'compile)
 (require 'info-look)
+(require 'tramp)
 
 (eval-when-compile
   (require 'cl-lib)
-  (require 'tramp)
   (require 'subr-x))
 
 
