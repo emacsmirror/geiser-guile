@@ -1,6 +1,6 @@
 ;;; completion.scm -- completing known symbols and module names
 
-;; Copyright (C) 2009, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2012, 2023 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -21,7 +21,8 @@
     (sort! (map symbol->string (apropos-internal prefix)) string<?)))
 
 (define (module-completions prefix)
-  (let* ((prefix (string-append "^" (regexp-quote prefix)))
+  (let* ((prefix (regexp-substitute/global #f "\\)*$" prefix 'pre "" 'post))
+         (prefix (string-append "^" (regexp-quote prefix)))
          (matcher (lambda (s) (string-match prefix s)))
          (names (filter matcher (all-modules))))
     (sort! names string<?)))
