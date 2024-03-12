@@ -1,6 +1,6 @@
 ;;; geiser-guile.el --- Guile and Geiser talk to each other  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2023 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2024 Jose Antonio Ortega Ruiz
 ;; Start date: Sun Mar 08, 2009 23:03
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
@@ -558,7 +558,7 @@ This function uses `geiser-guile-init-file' if it exists."
   (let ((shell-command-switch "-c")
         (shell-file-name "sh"))
     (shell-command-to-string
-     (format "%s -c %s"
+     (format "%s -c %s 2>/dev/null"
              (geiser-guile--binary)
              (shell-quote-argument "(display (version))")))))
 
