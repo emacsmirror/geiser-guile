@@ -47,6 +47,13 @@ geiser-guile.
   One can also provide a global list of paths to add to Guile's
   =%load-path= via ~geiser-guile-load-path~.
 
+* Texinfo docstrings
+
+  You can enable processing of texinfo in docstrings by customizing
+  ~geiser-guile-doc-process-texinfo~ to a non-nil value.  If enabled and
+  docstring is a valid texinfo snippet, it will be converted into a plain text
+  before being displayed.
+
 * Debugging support
 
   Guile supports all the debugger commands supported by Geiser (it's
