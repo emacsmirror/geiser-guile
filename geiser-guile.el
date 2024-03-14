@@ -638,7 +638,10 @@ See `geiser-guile-use-declarative-modules'."
     (dolist (dir g-load-path)
       (let ((dir (expand-file-name dir)))
         (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
-    (geiser-guile-update-warning-level)
+    (let ((geiser-guile-warning-level
+           (buffer-local-value 'geiser-guile-warning-level
+                               geiser-repl--last-scm-buffer)))
+      (geiser-guile-update-warning-level))
     (let ((geiser-guile-doc-process-texinfo
            (buffer-local-value 'geiser-guile-doc-process-texinfo
                                geiser-repl--last-scm-buffer)))
