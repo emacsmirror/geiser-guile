@@ -23,7 +23,12 @@
   #:use-module (ice-9 regex)
   #:use-module (ice-9 format)
   #:use-module (oop goops)
-  #:use-module (srfi srfi-1))
+  #:use-module (srfi srfi-1)
+  #:use-module (texinfo)
+  #:use-module (texinfo plain-text))
+
+;;; Should texinfo in docstrings be processed?
+(define %process-texinfo? #f)
 
 (define (autodoc ids)
   (if (not (list? ids))
@@ -194,6 +199,15 @@
         `(("signature" . ,(or (obj-signature sym obj #f) sym))
           ("docstring" . ,(docstring sym obj))))))
 
+(define (try-texinfo->plain-text str)
+  "Convert STR from texinfo into a plain text, assuming it is a valid texinfo
+and %process-texinfo? is #t.
+
+Return either the resulting plain text or the original STR."
+  (or (and %process-texinfo?
+           (false-if-exception (stexi->plain-text (texi-fragment->stexi str))))
+      str))
+
 (define (docstring sym obj)
   (define (valuable?)
     (not (or (macro? obj) (procedure? obj) (program? obj))))
@@ -212,7 +226,7 @@
               (display modname)
               (display ".")))
         (newline)
-        (if doc (begin (newline) (display doc)))
+        (if doc (begin (newline) (display (try-texinfo->plain-text doc))))
         (if (valuable?) (begin (newline)
                                (display "Value:")
                                (newline)

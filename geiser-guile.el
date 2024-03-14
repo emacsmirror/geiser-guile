@@ -169,6 +169,14 @@ effect on new REPLs.  For existing ones, use the command
   "List of info nodes that, when present, are used for manual lookups."
   :type '(repeat string))
 
+(geiser-custom--defcustom geiser-guile-doc-process-texinfo nil
+  "Non-nil means try to convert docstrings from texinfo into plain-text.
+
+Changes to the value of this variable will automatically take
+effect on new REPLs.  For existing ones, use the command
+\\[geiser-guile-update-doc-process-texinfo]."
+  :type 'boolean)
+
 
 ;;; REPL support
 
@@ -570,6 +578,17 @@ The new level is set using the value of `geiser-guile-warning-level'."
                       (geiser evaluation))))
     (geiser-eval--send/result code)))
 
+(defun geiser-guile-update-doc-process-texinfo ()
+  "Update whether docstrings should be processed as texinfo.
+The new value is set using the value of `geiser-guile-doc-process-texinfo'."
+  (interactive)
+  (let* ((new-value (if geiser-guile-doc-process-texinfo
+                        '\#t
+                      '\#f))
+         (code `(begin (set! (@@ (geiser doc) %process-texinfo?) ,new-value)
+                       'done)))
+    (geiser-eval--send/wait code)))
+
 ;;;###autoload
 (defun connect-to-guile ()
   "Start a Guile REPL connected to a remote process.
@@ -619,7 +638,11 @@ See `geiser-guile-use-declarative-modules'."
     (dolist (dir g-load-path)
       (let ((dir (expand-file-name dir)))
         (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
-    (geiser-guile-update-warning-level)))
+    (geiser-guile-update-warning-level)
+    (let ((geiser-guile-doc-process-texinfo
+           (buffer-local-value 'geiser-guile-doc-process-texinfo
+                               geiser-repl--last-scm-buffer)))
+      (geiser-guile-update-doc-process-texinfo))))
 
 
 ;;; Manual lookup

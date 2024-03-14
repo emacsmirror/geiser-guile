@@ -73,6 +73,11 @@ loading @samp{~/.guile}, leave @code{geiser-guile-init-file} alone and set
 One can also provide a global list of paths to add to Guile's
 @samp{%load-path} via @code{geiser-guile-load-path}.
 
+You can enable processing of texinfo in docstrings by customizing
+@code{geiser-guile-doc-process-texinfo} to a non-nil value.  If
+enabled and docstring is a valid texinfo snippet, it will be converted
+into a plain text before being displayed.
+
 @node Debugging support
 @unnumbered Debugging support
 
