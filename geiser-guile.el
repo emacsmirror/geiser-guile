@@ -626,10 +626,9 @@ See `geiser-guile-use-declarative-modules'."
 (defun geiser-guile--startup (remote)
   "Startup function, for a remote connection if REMOTE is t."
   (geiser-guile--set-up-error-links)
-  (let ((geiser-log-verbose t)
-        (g-load-path (buffer-local-value 'geiser-guile-load-path
-                                         (or geiser-repl--last-scm-buffer
-                                             (current-buffer)))))
+  (let* ((last-scm (or geiser-repl--last-scm-buffer (current-buffer)))
+         (geiser-log-verbose t)
+         (g-load-path (buffer-local-value 'geiser-guile-load-path last-scm)))
     (when (or geiser-guile--conn-address remote)
       (geiser-guile--set-geiser-load-path))
     (geiser-guile--set-up-declarative-modules)
@@ -639,12 +638,10 @@ See `geiser-guile-use-declarative-modules'."
       (let ((dir (expand-file-name dir)))
         (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
     (let ((geiser-guile-warning-level
-           (buffer-local-value 'geiser-guile-warning-level
-                               geiser-repl--last-scm-buffer)))
+           (buffer-local-value 'geiser-guile-warning-level last-scm)))
       (geiser-guile-update-warning-level))
     (let ((geiser-guile-doc-process-texinfo
-           (buffer-local-value 'geiser-guile-doc-process-texinfo
-                               geiser-repl--last-scm-buffer)))
+           (buffer-local-value 'geiser-guile-doc-process-texinfo last-scm)))
       (geiser-guile-update-doc-process-texinfo))))
 
 
