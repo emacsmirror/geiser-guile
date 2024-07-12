@@ -169,6 +169,11 @@ effect on new REPLs.  For existing ones, use the command
   "List of info nodes that, when present, are used for manual lookups."
   :type '(repeat string))
 
+(geiser-custom--defcustom geiser-guile-manual-lookup-indices
+    '("R5RS Index" "Concept Index" "Procedure Index" "Variable Index")
+  "List of info index nodes that, when present, are used for manual lookups."
+  :type '(repeat string))
+
 (geiser-custom--defcustom geiser-guile-doc-process-texinfo nil
   "Non-nil means try to convert docstrings from texinfo into plain-text.
 
@@ -658,7 +663,7 @@ See `geiser-guile-use-declarative-modules'."
         (mapc (lambda (idx)
                 (add-to-list 'res
                              (list (format "(%s)%s" node idx) nil nrx drx)))
-              '("R5RS Index" "Concept Index" "Procedure Index" "Variable Index"))))))
+              geiser-guile-manual-lookup-indices)))))
 
 (info-lookup-add-help :topic 'symbol
                       :mode 'geiser-guile-mode
