@@ -169,10 +169,45 @@ effect on new REPLs.  For existing ones, use the command
   "List of info nodes that, when present, are used for manual lookups."
   :type '(repeat string))
 
+(make-obsolete-variable 'geiser-guile-manual-lookup-nodes
+                        'geiser-guile-manual-lookup-alist
+                        "0.28.2")
+
 (geiser-custom--defcustom geiser-guile-manual-lookup-indices
     '("R5RS Index" "Concept Index" "Procedure Index" "Variable Index")
   "List of info index nodes that, when present, are used for manual lookups."
   :type '(repeat string))
+
+(make-obsolete-variable 'geiser-guile-manual-lookup-indices
+                        'geiser-guile-manual-lookup-alist
+                        "0.28.2")
+
+(geiser-custom--defcustom geiser-guile-manual-lookup-alist
+    (append (mapcar (lambda (x) (cons x geiser-guile-manual-lookup-indices))
+                    geiser-guile-manual-lookup-nodes)
+            '(("r5rs" . ("Index"))))
+  "Alist of Info nodes and their indices that are used for manual lookups.
+Each element looks like (NODE . INDICES).  NODE is an Info node
+and INDICES is a list of index nodes corresponding to NODE."
+  :type '(alist :key-type string :value-type (repeat string))
+  :set (lambda (sym val)
+         "Update `info-lookup-alist' based on VAL.
+Also, update the toplevel default value of SYM to VAL."
+         (let ((nrx "^[       ]+-+ [^:]+:[    ]*")
+               (drx "\\b")
+               (spec))
+           (dolist (row val spec)
+             (when-let ((file (car row))
+                        ((Info-find-file file t))
+                        (indices (cdr row)))
+               (dolist (ix indices)
+                 (push (list (format "(%s)%s" file ix) nil nrx drx) spec))))
+           (info-lookup-add-help :topic 'symbol
+                                 :mode 'geiser-guile-mode
+                                 :ignore-case nil
+                                 :regexp "[^()`',\"        \n]+"
+                                 :doc-spec spec))
+         (set-default-toplevel-value sym val)))
 
 (geiser-custom--defcustom geiser-guile-doc-process-texinfo nil
   "Non-nil means try to convert docstrings from texinfo into plain-text.
@@ -651,25 +686,6 @@ See `geiser-guile-use-declarative-modules'."
 
 
 ;;; Manual lookup
-
-(defun geiser-guile--info-spec ()
-  "Return info specification for given NODES."
-  (let* ((nrx "^[       ]+-+ [^:]+:[    ]*")
-         (drx "\\b")
-         (res (when (Info-find-file "r5rs" t)
-                `(("(r5rs)Index" nil ,nrx ,drx)))))
-    (dolist (node geiser-guile-manual-lookup-nodes res)
-      (when (Info-find-file node t)
-        (mapc (lambda (idx)
-                (add-to-list 'res
-                             (list (format "(%s)%s" node idx) nil nrx drx)))
-              geiser-guile-manual-lookup-indices)))))
-
-(info-lookup-add-help :topic 'symbol
-                      :mode 'geiser-guile-mode
-                      :ignore-case nil
-                      :regexp "[^()`',\"        \n]+"
-                      :doc-spec (geiser-guile--info-spec))
 
 (defun geiser-guile--info-lookup (id)
   (cond ((null id) (info "guile"))
