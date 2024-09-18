@@ -603,8 +603,9 @@ This function uses `geiser-guile-init-file' if it exists."
 (defun geiser-guile--version (_binary)
   "Find Guile's version running the configured Guile binary."
   ;; maybe one day we'll have `process-lines' with tramp support
-  (let ((shell-command-switch "-c")
-        (shell-file-name "sh"))
+  (let* ((unixy (not (member system-type '(windows-nt ms-dos cygwin))))
+         (shell-command-switch (if unixy "-c" shell-command-switch))
+         (shell-file-name (if unixy "sh" shell-file-name)))
     (shell-command-to-string
      (format "%s -c %s 2>/dev/null"
              (geiser-guile--binary)
