@@ -76,3 +76,11 @@ geiser-guile.
   Geiser guile can be used remotely via tramp connections: the REPL
   process will be run in the machine where the tramp-accessed file
   lives.  Implemented by Felipe Lema.
+* Contributing
+*** Generative AI (LLMs)
+
+  Use of generative AI (LLMs, diffusion models and similar technology) is not
+  acceptable for contributions to or interactions with the xmobar project.
+
+  This includes words, images and code, as well as bug reports, commit
+  messages, email (mailing list or private) and IRC messages.
