@@ -1,5 +1,11 @@
 #+TITLE: Geiser and Guile talk to each other
 
+#+html: <p align=right>
+#+html: <a href="http://elpa.nongnu.org/nongnu/geiser-guile.html"><img alt="NonGNU Elpa" src="http://elpa.nongnu.org/nongnu/geiser-guile.svg"/> </a>
+#+html: <a href="http://elpa.nongnu.org/nongnu-devel/geiser-guile.html"><img alt="NonGNU Devel Elpa" src="http://elpa.nongnu.org/nongnu-devel/geiser-guile.svg"/></a>
+#+html: <a href="https://melpa.org/#/geiser-guile"><img alt="MELPA" src="https://melpa.org/packages/geiser-guile-badge.svg"/></a>
+#+html: </p>
+
 * Overview
 
 This package provides support for using [[https://www.gnu.org/software/guile/][GNU Guile]] in Emacs with
