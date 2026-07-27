@@ -1,9 +1,4 @@
 #+TITLE: Geiser and Guile talk to each other
-#+OPTIONS: d:nil
-#+EXPORT_FILE_NAME: geiser-guile.texi
-#+TEXINFO_DIR_CATEGORY: Emacs
-#+TEXINFO_DIR_TITLE: Geiser Guile: (geiser-guile).
-#+TEXINFO_DIR_DESC: Support for Guile in Geiser
 
 * Overview
 
@@ -80,7 +75,7 @@ geiser-guile.
 *** Generative AI (LLMs)
 
   Use of generative AI (LLMs, diffusion models and similar technology) is not
-  acceptable for contributions to or interactions with the xmobar project.
+  acceptable for contributions to or interactions with this project.
 
   This includes words, images and code, as well as bug reports, commit
   messages, email (mailing list or private) and IRC messages.
